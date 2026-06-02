@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 import { createClient } from './server'
 
 export type UserRole = 'Admin' | 'panadero' | 'vendedor' | 'planificacion'
@@ -10,7 +11,7 @@ export interface CurrentUser {
   role: UserRole
 }
 
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createClient()
 
   const {
@@ -45,7 +46,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     name: profile?.name ?? user.email?.split('@')[0] ?? 'Usuario',
     role: roleName as UserRole,
   }
-}
+})
 
 export function getRoleDashboardPath(role: UserRole): string {
   const paths: Record<UserRole, string> = {
