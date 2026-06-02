@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import type { VariableExpense, FixedCost, TeamMember } from '@/lib/gastos/types'
-import { VE_CATEGORY_OPTIONS, MONTHLY_PRODUCTION_HOURS, weeklyToMonthly } from '@/lib/gastos/types'
+import { VE_CATEGORY_OPTIONS, weeklyToMonthly } from '@/lib/gastos/types'
 import {
-  deactivateVariableExpense, reactivateVariableExpense, deleteVariableExpense,
-  deactivateFixedCost, reactivateFixedCost,
-  deactivateTeamMember, reactivateTeamMember,
+  deleteVariableExpense,
+  deactivateFixedCost, reactivateFixedCost, deleteFixedCost,
+  deactivateTeamMember, reactivateTeamMember, deleteTeamMember,
 } from '@/lib/gastos/actions'
 import { formatMXN, formatDate } from '@/lib/costing/format'
 
@@ -31,17 +31,9 @@ function ChevronDown() {
 function VariableExpenseCard({ item }: { item: VariableExpense }) {
   const [open, setOpen] = useState(false)
 
-  const amountLabel = item.amount_per_hour != null && item.amount_fixed != null
-    ? `${formatMXN(item.amount_per_hour)}/hr + ${formatMXN(item.amount_fixed)}/mes`
-    : item.amount_per_hour != null
-      ? `${formatMXN(item.amount_per_hour)}/hr`
-      : `${formatMXN(item.amount_fixed ?? 0)}/mes`
-
   return (
     <div className={`bg-white rounded-2xl border transition-shadow ${
-      item.active
-        ? open ? 'border-amber-200 shadow-md' : 'border-gray-200 shadow-sm'
-        : 'border-gray-100 opacity-60'
+      open ? 'border-amber-200 shadow-md' : 'border-gray-200 shadow-sm'
     }`}>
       <button
         type="button"
@@ -49,13 +41,11 @@ function VariableExpenseCard({ item }: { item: VariableExpense }) {
         className="w-full px-5 py-4 flex items-center gap-3 text-left"
       >
         <div className="flex-1 min-w-0">
-          <p className="text-base font-semibold text-gray-800 truncate">{item.name}</p>
-          {!item.active && (
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">inactivo</span>
-          )}
+          <p className="text-base font-semibold text-gray-800 truncate">{item.description}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{formatDate(item.expense_date)}</p>
         </div>
         <div className="shrink-0 flex items-center gap-3">
-          <span className="text-sm font-bold text-gray-800 tabular-nums text-right">{amountLabel}</span>
+          <span className="text-sm font-bold text-gray-800 tabular-nums">{formatMXN(item.amount)}</span>
           <span className={`text-gray-400 transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
             <ChevronDown />
           </span>
@@ -64,14 +54,6 @@ function VariableExpenseCard({ item }: { item: VariableExpense }) {
 
       {open && (
         <div className="px-5 pb-5 border-t border-gray-100 space-y-4 pt-4">
-          {item.amount_per_hour != null && (
-            <div>
-              <p className="text-xs text-gray-400">Costo estimado mensual (× {MONTHLY_PRODUCTION_HOURS}h)</p>
-              <p className="text-sm font-medium text-gray-700">
-                {formatMXN(item.amount_per_hour * MONTHLY_PRODUCTION_HOURS)}/mes
-              </p>
-            </div>
-          )}
           {item.notes && (
             <div>
               <p className="text-xs text-gray-400 mb-0.5">Notas</p>
@@ -79,35 +61,18 @@ function VariableExpenseCard({ item }: { item: VariableExpense }) {
             </div>
           )}
           <div className="flex flex-col gap-2 pt-1">
-            {item.active ? (
-              <>
-                <Link
-                  href={`/admin/gastos/variable/${item.id}/editar`}
-                  className="w-full text-center rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 text-sm transition-colors"
-                >
-                  Editar gasto
-                </Link>
-                <form action={deactivateVariableExpense}>
-                  <input type="hidden" name="id" value={item.id} />
-                  <button type="submit" className="w-full rounded-xl border border-red-200 text-red-500 hover:bg-red-50 font-medium py-3 text-sm transition-colors">
-                    Desactivar
-                  </button>
-                </form>
-                <form action={deleteVariableExpense}>
-                  <input type="hidden" name="id" value={item.id} />
-                  <button type="submit" className="w-full rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 font-medium py-3 text-sm transition-colors">
-                    Eliminar registro
-                  </button>
-                </form>
-              </>
-            ) : (
-              <form action={reactivateVariableExpense}>
-                <input type="hidden" name="id" value={item.id} />
-                <button type="submit" className="w-full rounded-xl border border-amber-300 text-amber-700 hover:bg-amber-50 font-medium py-3 text-sm transition-colors">
-                  Reactivar
-                </button>
-              </form>
-            )}
+            <Link
+              href={`/admin/gastos/variable/${item.id}/editar`}
+              className="w-full text-center rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 text-sm transition-colors"
+            >
+              Editar gasto
+            </Link>
+            <form action={deleteVariableExpense}>
+              <input type="hidden" name="id" value={item.id} />
+              <button type="submit" className="w-full rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 font-medium py-3 text-sm transition-colors">
+                Eliminar registro
+              </button>
+            </form>
           </div>
         </div>
       )}
@@ -144,7 +109,7 @@ function FixedCostCard({ item }: { item: FixedCost }) {
         </div>
         <div className="shrink-0 flex items-center gap-3">
           <div className="text-right">
-            <p className="text-base font-bold text-gray-800 tabular-nums">{formatMXN(item.amount_monthly)}</p>
+            <p className="text-base font-bold text-gray-800 tabular-nums">{formatMXN(item.amount)}</p>
             <p className="text-xs text-gray-400">mensual</p>
           </div>
           <span className={`text-gray-400 transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
@@ -191,6 +156,12 @@ function FixedCostCard({ item }: { item: FixedCost }) {
                 </button>
               </form>
             )}
+            <form action={deleteFixedCost}>
+              <input type="hidden" name="id" value={item.id} />
+              <button type="submit" className="w-full rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 font-medium py-3 text-sm transition-colors">
+                Eliminar registro
+              </button>
+            </form>
           </div>
         </div>
       )}
@@ -205,9 +176,7 @@ function FixedCostCard({ item }: { item: FixedCost }) {
 function TeamMemberCard({ member }: { member: TeamMember }) {
   const [open, setOpen] = useState(false)
 
-  const totalHours = member.production_hours_per_week + member.sales_hours_per_week
-  const currentWeekly = member.current_hourly_rate != null ? member.current_hourly_rate * totalHours : null
-  const currentMonthly = currentWeekly != null ? weeklyToMonthly(currentWeekly) : null
+  const currentMonthly = weeklyToMonthly(member.current_weekly_wage)
 
   return (
     <div className={`bg-white rounded-2xl border transition-shadow ${
@@ -231,9 +200,9 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
         </div>
         <div className="shrink-0 flex items-center gap-3">
           <div className="text-right">
-            {currentWeekly != null ? (
+            {member.current_weekly_wage > 0 ? (
               <>
-                <p className="text-base font-bold text-gray-800 tabular-nums">{formatMXN(currentWeekly)}</p>
+                <p className="text-base font-bold text-gray-800 tabular-nums">{formatMXN(member.current_weekly_wage)}</p>
                 <p className="text-xs text-gray-400">por semana</p>
               </>
             ) : (
@@ -249,10 +218,10 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
       {open && (
         <div className="px-5 pb-5 border-t border-gray-100 space-y-4 pt-4">
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            {member.current_hourly_rate != null && (
+            {member.current_weekly_wage > 0 && (
               <div>
-                <p className="text-xs text-gray-400 mb-0.5">Tarifa por hora</p>
-                <p className="text-sm font-medium text-gray-700">{formatMXN(member.current_hourly_rate)}/hr</p>
+                <p className="text-xs text-gray-400 mb-0.5">Equivalente mensual</p>
+                <p className="text-sm font-medium text-gray-700">{formatMXN(currentMonthly)}/mes</p>
               </div>
             )}
             {currentMonthly != null && (
@@ -311,6 +280,12 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
                 </button>
               </form>
             )}
+            <form action={deleteTeamMember}>
+              <input type="hidden" name="id" value={member.id} />
+              <button type="submit" className="w-full rounded-xl border border-gray-200 text-gray-400 hover:bg-gray-50 font-medium py-3 text-sm transition-colors">
+                Eliminar registro
+              </button>
+            </form>
           </div>
         </div>
       )}
@@ -360,21 +335,22 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
   const activosFijos = fixedCosts.filter((f) => f.active)
   const activosEquipo = teamMembers.filter((m) => m.active)
 
-  const totalFijosMonthly = activosFijos.reduce((s, f) => s + f.amount_monthly, 0)
-  const totalVarFixed = variableExpenses.filter(e => e.active && e.amount_fixed != null)
-    .reduce((s, e) => s + (e.amount_fixed ?? 0), 0)
-  const totalVarPerHour = variableExpenses.filter(e => e.active && e.amount_per_hour != null)
-    .reduce((s, e) => s + (e.amount_per_hour ?? 0), 0)
-  const totalSueldos = activosEquipo.reduce((s, m) => {
-    if (m.current_hourly_rate == null) return s
-    const hours = m.production_hours_per_week + m.sales_hours_per_week
-    return s + weeklyToMonthly(m.current_hourly_rate * hours)
-  }, 0)
-  const totalOverhead = totalFijosMonthly + totalVarFixed + (totalVarPerHour * MONTHLY_PRODUCTION_HOURS) + totalSueldos
+  // Variable expenses: sum for the current calendar month
+  const thisMonth = new Date().toISOString().slice(0, 7)
+  const totalVarThisMonth = variableExpenses
+    .filter((e) => e.expense_date.startsWith(thisMonth))
+    .reduce((s, e) => s + e.amount, 0)
 
-  const activeCount = {
-    operativo: operativos.filter(e => e.active).length,
-    administrativo: administrativos.filter(e => e.active).length,
+  const totalFijosMonthly = activosFijos.reduce((s, f) => s + f.amount, 0)
+  const totalSueldos = activosEquipo.reduce((s, m) => {
+    if (m.current_weekly_wage <= 0) return s
+    return s + weeklyToMonthly(m.current_weekly_wage)
+  }, 0)
+  const totalOverhead = totalVarThisMonth + totalFijosMonthly + totalSueldos
+
+  const tabCount = {
+    operativo: operativos.length,
+    administrativo: administrativos.length,
     fijos: activosFijos.length,
     equipo: activosEquipo.length,
   }
@@ -386,10 +362,8 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
         <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Overhead mensual estimado</p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="text-center">
-            <p className="text-xs text-gray-500">Variables</p>
-            <p className="text-sm font-bold text-gray-800 tabular-nums">
-              {formatMXN(totalVarFixed + totalVarPerHour * MONTHLY_PRODUCTION_HOURS)}
-            </p>
+            <p className="text-xs text-gray-500">Variables (mes)</p>
+            <p className="text-sm font-bold text-gray-800 tabular-nums">{formatMXN(totalVarThisMonth)}</p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500">Fijos</p>
@@ -420,9 +394,9 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
             }`}
           >
             {t.label}
-            {activeCount[t.id] > 0 && (
+            {tabCount[t.id] > 0 && (
               <span className={`ml-1 text-xs ${tab === t.id ? 'text-amber-500' : 'text-gray-400'}`}>
-                {activeCount[t.id]}
+                {tabCount[t.id]}
               </span>
             )}
           </button>
@@ -433,12 +407,14 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
       {(tab === 'operativo' || tab === 'administrativo') && (
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-gray-600">
-              {tab === 'operativo' ? 'Gastos operativos' : 'Gastos administrativos'}
-              <span className="ml-1 text-xs font-normal text-gray-400">
-                {VE_CATEGORY_OPTIONS.find(o => o.value === tab)?.hint}
-              </span>
-            </p>
+            <div>
+              <p className="text-sm font-semibold text-gray-600">
+                {tab === 'operativo' ? 'Gastos operativos' : 'Gastos administrativos'}
+              </p>
+              <p className="text-xs text-gray-400">
+                {tab === 'operativo' ? 'Gas, empaques, transporte, compras…' : 'Internet, contador, software…'}
+              </p>
+            </div>
             <Link
               href="/admin/gastos/variable/nuevo"
               className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-2 transition-colors"
@@ -448,11 +424,10 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
           </div>
 
           {(tab === 'operativo' ? operativos : administrativos).length === 0 ? (
-            <EmptyState label="Agregar gasto variable" href="/admin/gastos/variable/nuevo" />
+            <EmptyState label="Registrar gasto" href="/admin/gastos/variable/nuevo" />
           ) : (
             <div className="space-y-2">
               {(tab === 'operativo' ? operativos : administrativos)
-                .sort((a, b) => Number(b.active) - Number(a.active))
                 .map((item) => <VariableExpenseCard key={item.id} item={item} />)}
             </div>
           )}

@@ -25,6 +25,46 @@ function XIcon() {
   )
 }
 
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="w-4 h-4">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  )
+}
+
+function exportToCSV(insumos: IngredienteListItem[]) {
+  const headers = ['Nombre', 'Unidad base', 'Categoría', 'Proveedor', 'Precio/unidad', 'Presentación', 'Cant. pres.', 'Unidad pres.', 'Precio compra', 'Activo']
+  const rows = insumos.map((i) => [
+    i.name,
+    i.base_unit,
+    i.ingredient_categories?.name ?? '',
+    i.supplier_name ?? '',
+    i.unit_price != null ? i.unit_price.toFixed(4) : '',
+    i.presentation_name ?? '',
+    i.presentation_quantity != null ? String(i.presentation_quantity) : '',
+    i.presentation_unit ?? '',
+    i.purchase_price != null ? i.purchase_price.toFixed(2) : '',
+    i.active ? 'Sí' : 'No',
+  ])
+  const csv = [headers, ...rows]
+    .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n')
+  // BOM for Excel compatibility
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `insumos-${new Date().toISOString().split('T')[0]}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 interface Props {
   insumos: IngredienteListItem[]
   basePath: string
@@ -69,6 +109,20 @@ export default function InsumosPageClient({ insumos, basePath, showImport = fals
           </button>
         )}
       </div>
+
+      {/* ── Exportar ── */}
+      {insumos.length > 0 && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => exportToCSV(insumos)}
+            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-amber-700 transition-colors py-1 px-2 rounded-lg hover:bg-amber-50"
+          >
+            <DownloadIcon />
+            Exportar CSV
+          </button>
+        </div>
+      )}
 
       {/* ── Sin resultados ── */}
       {noResults && (

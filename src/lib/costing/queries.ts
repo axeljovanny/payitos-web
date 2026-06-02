@@ -170,9 +170,9 @@ export async function fetchTeamMembers(): Promise<TeamMemberRow[]> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('team_members')
-    .select('id, name, role_type, active')
+    .select('id, full_name, role_type, active, current_weekly_wage, production_hours_per_week, sales_hours_per_week')
     .eq('active', true)
-    .order('name')
+    .order('full_name')
   return (data ?? []) as TeamMemberRow[]
 }
 
@@ -180,20 +180,18 @@ export async function fetchFixedCosts(): Promise<FixedCostRow[]> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('fixed_costs')
-    .select('id, name, category, amount_monthly, active')
+    .select('id, name, category, amount, active')
     .eq('active', true)
     .order('category, name')
   return (data ?? []) as FixedCostRow[]
 }
 
 export async function fetchVariableExpenses(): Promise<VariableExpenseRow[]> {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('variable_expenses')
-    .select('id, name, category, amount_per_hour, amount_fixed, active')
-    .eq('active', true)
-    .order('category, name')
-  return (data ?? []) as VariableExpenseRow[]
+  // variable_expenses is a transactional ledger (expense_date, description, amount)
+  // — it has no amount_per_hour / amount_fixed overhead rate columns.
+  // Overhead from variable expenses is excluded from the cost engine until
+  // the rate model is defined.
+  return []
 }
 
 // ── Cost engine contexts ─────────────────────────────────────────────────────
@@ -201,34 +199,23 @@ export async function fetchVariableExpenses(): Promise<VariableExpenseRow[]> {
 export async function fetchLaborCostContext(): Promise<LaborCostContext | null> {
   const supabase = await createClient()
 
-  const { data: members, error: membersError } = await supabase
+  const { data: members, error } = await supabase
     .from('team_members')
-    .select('id')
+    .select('current_weekly_wage, production_hours_per_week, sales_hours_per_week')
     .eq('active', true)
 
-  if (membersError || !members?.length) return null
+  if (error || !members?.length) return null
 
-  const memberIds = members.map((m: { id: string }) => m.id)
+  // Derive hourly rate: weekly_wage / total_hours_per_week
+  const rates: number[] = []
+  for (const m of members as Array<{ current_weekly_wage: number; production_hours_per_week: number; sales_hours_per_week: number }>) {
+    const weekly = Number(m.current_weekly_wage)
+    if (weekly <= 0) continue
+    const hours = Number(m.production_hours_per_week) + Number(m.sales_hours_per_week)
+    rates.push(weekly / (hours > 0 ? hours : 40))
+  }
 
-  const { data: wages, error: wagesError } = await supabase
-    .from('wages')
-    .select('team_member_id, hourly_rate')
-    .in('team_member_id', memberIds)
-    .order('effective_from', { ascending: false })
-
-  if (wagesError || !wages?.length) return null
-
-  // Keep only the most recent rate per member
-  const latestByMember = new Map<string, number>()
-  wages.forEach((w: { team_member_id: string; hourly_rate: number }) => {
-    if (!latestByMember.has(w.team_member_id)) {
-      latestByMember.set(w.team_member_id, Number(w.hourly_rate))
-    }
-  })
-
-  const rates = [...latestByMember.values()]
   if (!rates.length) return null
-
   const average_hourly_rate = rates.reduce((sum, r) => sum + r, 0) / rates.length
   return { average_hourly_rate }
 }
@@ -236,20 +223,17 @@ export async function fetchLaborCostContext(): Promise<LaborCostContext | null> 
 export async function fetchOverheadCostContext(): Promise<OverheadCostContext | null> {
   const supabase = await createClient()
 
-  const [{ data: fixedCosts }, { data: variableExpenses }] = await Promise.all([
-    supabase.from('fixed_costs').select('amount_monthly').eq('active', true),
-    supabase
-      .from('variable_expenses')
-      .select('amount_per_hour')
-      .eq('active', true)
-      .not('amount_per_hour', 'is', null),
-  ])
+  const { data: fixedCosts } = await supabase
+    .from('fixed_costs')
+    .select('amount')
+    .eq('active', true)
 
   const totalMonthlyFixed = (fixedCosts ?? []).reduce(
-    (sum: number, fc: { amount_monthly: number }) => sum + Number(fc.amount_monthly),
+    (sum: number, fc: { amount: number }) => sum + Number(fc.amount),
     0
   )
-  const totalEnergyPerHour = (variableExpenses ?? []).reduce(
+  // variable_expenses is a ledger table — no per-hour overhead rates available
+  const totalEnergyPerHour = ([] as Array<{ amount_per_hour: number | null }>).reduce(
     (sum: number, ve: { amount_per_hour: number | null }) =>
       sum + Number(ve.amount_per_hour ?? 0),
     0

@@ -43,11 +43,11 @@ export default function GastoFijoForm({ action, defaultValues }: Props) {
             </label>
             <input
               type="number"
-              name="amount_monthly"
+              name="amount"
               required
               min="0.01"
               step="0.01"
-              defaultValue={defaultValues?.amount_monthly ?? ''}
+              defaultValue={defaultValues?.amount ?? ''}
               placeholder="ej. 12000"
               className={inputClass}
             />

@@ -1,7 +1,7 @@
-import Link from 'next/link'
 import { fetchCategoryOptions } from '@/lib/ingredientes/queries'
 import { deleteCategory } from '@/lib/ingredientes/actions'
 import AddCategoryForm from '@/components/insumos/add-category-form'
+import BackButton from '@/components/ui/back-button'
 
 function TrashIcon() {
   return (
@@ -21,12 +21,7 @@ export default async function CategoriasInsumosPage() {
   return (
     <div className="space-y-5">
       <div>
-        <Link
-          href="/admin/insumos"
-          className="text-xs text-amber-700 hover:text-amber-900 font-medium"
-        >
-          ← Insumos
-        </Link>
+        <BackButton href="/admin/insumos" label="Insumos" />
         <h1 className="text-xl font-bold text-gray-800 mt-2">Categorías de insumos</h1>
         <p className="text-sm text-gray-500 mt-0.5">
           Agrupa tus insumos para organizarlos más fácil.

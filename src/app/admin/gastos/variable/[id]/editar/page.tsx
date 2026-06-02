@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { fetchVariableExpenseById } from '@/lib/gastos/queries'
 import { updateVariableExpense } from '@/lib/gastos/actions'
 import GastoVariableForm from '@/components/gastos/gasto-variable-form'
+import BackButton from '@/components/ui/back-button'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -16,11 +16,9 @@ export default async function EditarGastoVariablePage({ params }: Props) {
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/admin/gastos" className="text-xs text-amber-700 hover:text-amber-900 font-medium">
-          ← Gastos
-        </Link>
+        <BackButton href="/admin/gastos" label="Gastos" />
         <h1 className="text-xl font-bold text-gray-800 mt-2">Editar gasto variable</h1>
-        <p className="text-sm text-gray-500 mt-0.5">{gasto.name}</p>
+        <p className="text-sm text-gray-500 mt-0.5">{gasto.description}</p>
       </div>
       <GastoVariableForm action={updateVariableExpense} defaultValues={gasto} />
     </div>

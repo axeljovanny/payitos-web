@@ -11,6 +11,10 @@ interface Props {
   defaultValues?: Partial<VariableExpense>
 }
 
+function today(): string {
+  return new Date().toISOString().split('T')[0]
+}
+
 export default function GastoVariableForm({ action, defaultValues }: Props) {
   const [state, formAction, pending] = useActionState(action, { error: null })
   const isEditing = !!defaultValues?.id
@@ -23,79 +27,63 @@ export default function GastoVariableForm({ action, defaultValues }: Props) {
       {defaultValues?.id && <input type="hidden" name="id" value={defaultValues.id} />}
 
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Fecha <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              name="expense_date"
+              required
+              defaultValue={defaultValues?.expense_date ?? today()}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Categoría <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="category"
+              defaultValue={defaultValues?.category ?? 'operativo'}
+              className={inputClass}
+            >
+              {VE_CATEGORY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Nombre <span className="text-red-500">*</span>
+            Descripción <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            name="name"
+            name="description"
             required
-            defaultValue={defaultValues?.name ?? ''}
-            placeholder="ej. Gas LP hornos, Empaques, Internet"
+            defaultValue={defaultValues?.description ?? ''}
+            placeholder="ej. Gas LP, empaques, transporte…"
             className={inputClass}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tipo <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Monto (MXN) <span className="text-red-500">*</span>
           </label>
-          <div className="grid grid-cols-2 gap-2">
-            {VE_CATEGORY_OPTIONS.map((opt) => (
-              <label
-                key={opt.value}
-                className="flex flex-col gap-0.5 rounded-xl border border-gray-200 bg-white px-3 py-3 cursor-pointer has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="category"
-                    value={opt.value}
-                    defaultChecked={(defaultValues?.category ?? 'operativo') === opt.value}
-                    className="accent-amber-600"
-                  />
-                  <span className="text-sm font-semibold text-gray-800">{opt.label}</span>
-                </div>
-                <span className="text-xs text-gray-400 pl-5">{opt.hint}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-          Llena uno o ambos montos. El costo por hora se multiplica por las horas mensuales de producción (160h) para calcular el overhead.
-        </p>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Costo por hora de producción (MXN)
-            </label>
-            <input
-              type="number"
-              name="amount_per_hour"
-              min="0"
-              step="0.01"
-              defaultValue={defaultValues?.amount_per_hour ?? ''}
-              placeholder="ej. 3.50"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Monto fijo mensual (MXN)
-            </label>
-            <input
-              type="number"
-              name="amount_fixed"
-              min="0"
-              step="0.01"
-              defaultValue={defaultValues?.amount_fixed ?? ''}
-              placeholder="ej. 800"
-              className={inputClass}
-            />
-          </div>
+          <input
+            type="number"
+            name="amount"
+            required
+            min="0.01"
+            step="0.01"
+            defaultValue={defaultValues?.amount ?? ''}
+            placeholder="ej. 450.00"
+            className={inputClass}
+          />
         </div>
 
         <div>
@@ -106,7 +94,7 @@ export default function GastoVariableForm({ action, defaultValues }: Props) {
             name="notes"
             rows={2}
             defaultValue={defaultValues?.notes ?? ''}
-            placeholder="ej. Promedio últimos 3 meses, pendiente ajustar…"
+            placeholder="ej. Factura #123, proveedor Casa López…"
             className={inputClass + ' resize-none'}
           />
         </div>

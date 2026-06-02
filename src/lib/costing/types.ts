@@ -45,23 +45,19 @@ export interface RecipeRow {
 
 export interface TeamMemberRow {
   id: string
-  name: string
+  full_name: string
   role_type: string
   active: boolean
-}
-
-export interface WageRow {
-  id: string
-  team_member_id: string
-  hourly_rate: number
-  effective_from: string
+  current_weekly_wage: number
+  production_hours_per_week: number
+  sales_hours_per_week: number
 }
 
 export interface FixedCostRow {
   id: string
   name: string
   category: string
-  amount_monthly: number
+  amount: number
   active: boolean
 }
 

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { CurrentUser } from '@/lib/supabase/user'
 import BottomNav from './nav'
+import SwipeNavigation from './swipe-navigation'
 
 interface Props {
   user: CurrentUser
@@ -42,11 +43,9 @@ export default function AppShell({ user, children }: Props) {
       </header>
 
       {/* ── Contenido scrollable ────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto w-full px-4 py-5">
-          {children}
-        </div>
-      </main>
+      <SwipeNavigation role={user.role}>
+        {children}
+      </SwipeNavigation>
 
       {/* ── Navegación inferior ─────────────────────────────── */}
       <BottomNav role={user.role} />

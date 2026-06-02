@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { fetchProductoById, fetchActiveRecipeForProduct } from '@/lib/productos/queries'
 import { deactivateProducto, reactivateProducto } from '@/lib/productos/actions'
 import { formatMXN, formatPercent } from '@/lib/costing/format'
+import BackButton from '@/components/ui/back-button'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -27,9 +28,7 @@ export default async function ProductoDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-5">
-      <Link href="/admin/productos" className="text-sm text-amber-700 hover:underline">
-        ← Productos
-      </Link>
+      <BackButton href="/admin/productos" label="Productos" />
 
       <div className="flex items-start justify-between gap-3">
         <div>

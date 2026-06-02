@@ -9,6 +9,7 @@ import { fetchRecipesForPrepSelector } from '@/lib/recetas/queries'
 import { formatMXN, formatDate } from '@/lib/costing/format'
 import IngredienteForm from '@/components/ingredientes/ingrediente-form'
 import PriceEntryForm from '@/components/ingredientes/price-entry-form'
+import BackButton from '@/components/ui/back-button'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -44,7 +45,8 @@ export default async function EditarInsumoAdminPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-gray-800">Editar insumo</h1>
+        <BackButton href="/admin/insumos" label="Insumos" />
+        <h1 className="text-xl font-bold text-gray-800 mt-2">Editar insumo</h1>
         <p className="text-sm text-gray-500 mt-0.5">{ingrediente.name}</p>
       </div>
 

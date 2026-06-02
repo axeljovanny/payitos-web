@@ -1,14 +1,11 @@
-// ── Variable expenses (overhead cost rates: gastos operativos / administrativos) ──
-
-export type VECategory = 'operativo' | 'administrativo'
+// ── Variable expenses (date-based expense log) ──
 
 export interface VariableExpense {
   id: string
-  name: string
-  category: VECategory
-  amount_per_hour: number | null  // cost that scales with production hours
-  amount_fixed: number | null     // flat monthly overhead amount
-  active: boolean
+  expense_date: string   // ISO date YYYY-MM-DD
+  category: string
+  description: string
+  amount: number
   notes: string | null
 }
 
@@ -18,7 +15,7 @@ export interface FixedCost {
   id: string
   name: string
   category: string | null
-  amount_monthly: number
+  amount: number
   active: boolean
   notes: string | null
   effective_from: string | null
@@ -28,15 +25,22 @@ export interface FixedCost {
 
 export interface TeamMember {
   id: string
-  name: string
+  name: string                      // maps from full_name in DB
   role_type: string | null
   active: boolean
   notes: string | null
   production_hours_per_week: number
   sales_hours_per_week: number
+  current_weekly_wage: number       // direct column, no wages table
   target_weekly_salary: number | null
-  current_hourly_rate: number | null  // resolved from wages table
 }
+
+export const ROLE_TYPE_OPTIONS = [
+  { value: 'production', label: 'Producción' },
+  { value: 'sales',      label: 'Ventas' },
+  { value: 'both',       label: 'Ventas y Producción' },
+  { value: 'admin',      label: 'Administrador' },
+] as const
 
 // ── Aggregated summary ──
 
@@ -49,12 +53,10 @@ export interface GastosSummary {
 
 // ── Options ──
 
-export const VE_CATEGORY_OPTIONS: { value: VECategory; label: string; hint: string }[] = [
-  { value: 'operativo', label: 'Operativo', hint: 'Gas, empaques, transporte, compras…' },
-  { value: 'administrativo', label: 'Administrativo', hint: 'Internet, contador, software…' },
-]
-
-export const MONTHLY_PRODUCTION_HOURS = 160 // 20 días × 8h — ajustar cuando exista config
+export const VE_CATEGORY_OPTIONS = [
+  { value: 'operativo',      label: 'Operativo' },
+  { value: 'administrativo', label: 'Administrativo' },
+] as const
 
 export function weeklyToMonthly(weekly: number): number {
   return weekly * (52 / 12)
