@@ -29,7 +29,7 @@ export async function proxy(request: NextRequest) {
         setAll(cookiesToSet) {
           // Write to request so downstream code sees the refreshed session
           cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value, options)
+            request.cookies.set({ name, value, ...options })
           )
           // Recreate response with updated request, then set cookies on it
           response = NextResponse.next({ request })

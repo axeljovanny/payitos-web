@@ -193,7 +193,7 @@ Aceite,lt,Casa López,Garrafa 5 lt,5,lt,190,2026-02-01`}</pre>
       )}
 
       {/* ── Preview ── */}
-      {preview && !confirmed && (
+      {preview && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
