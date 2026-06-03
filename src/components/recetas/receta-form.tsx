@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useMemo } from 'react'
 import Link from 'next/link'
@@ -130,7 +130,7 @@ export default function RecetaForm({ products, ingredients, prices, action, defa
   }, [batchCost, batchYield])
 
   const inputClass =
-    'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400'
+    'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]'
 
   return (
     <form action={formAction} className="space-y-5">
@@ -169,12 +169,12 @@ export default function RecetaForm({ products, ingredients, prices, action, defa
                 value={batchYield}
                 onChange={(e) => setBatchYield(e.target.value)}
                 required
-                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]"
               />
               <select
                 value={yieldUnit}
                 onChange={(e) => setYieldUnit(e.target.value)}
-                className="w-20 rounded-lg border border-gray-300 bg-white px-2 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-20 rounded-lg border border-gray-300 bg-white px-2 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]"
               >
                 <option value="pza">pza</option>
                 <option value="g">g</option>
@@ -220,7 +220,7 @@ export default function RecetaForm({ products, ingredients, prices, action, defa
           <button
             type="button"
             onClick={() => setRows((prev) => [...prev, newRow()])}
-            className="text-xs font-medium text-amber-700 hover:text-amber-900"
+            className="text-xs font-medium text-[#d43a6a] hover:text-[#8b1a42]"
           >
             + Agregar
           </button>
@@ -236,7 +236,7 @@ export default function RecetaForm({ products, ingredients, prices, action, defa
               <select
                 value={row.ingredient_id}
                 onChange={(e) => updateRow(row._key, 'ingredient_id', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]"
               >
                 <option value="">Selecciona ingrediente…</option>
                 {ingredients.map((ing) => (
@@ -254,13 +254,13 @@ export default function RecetaForm({ products, ingredients, prices, action, defa
                   step="any"
                   value={row.quantity}
                   onChange={(e) => updateRow(row._key, 'quantity', e.target.value)}
-                  className="w-20 rounded-lg border border-gray-300 px-2 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-20 rounded-lg border border-gray-300 px-2 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]"
                 />
 
                 <select
                   value={row.unit}
                   onChange={(e) => updateRow(row._key, 'unit', e.target.value)}
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]"
                 >
                   {UNIT_OPTIONS.map((u) => (
                     <option key={u} value={u}>{u}</option>
@@ -276,7 +276,7 @@ export default function RecetaForm({ products, ingredients, prices, action, defa
                     step="1"
                     value={row.waste_factor_percent}
                     onChange={(e) => updateRow(row._key, 'waste_factor_percent', e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-2 py-2 pr-5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-lg border border-gray-300 px-2 py-2 pr-5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]"
                   />
                   <span className="pointer-events-none absolute right-2 top-2.5 text-xs text-gray-400">
                     %
@@ -298,7 +298,7 @@ export default function RecetaForm({ products, ingredients, prices, action, defa
               {prices && row.ingredient_id && row.quantity && (
                 <div className="pl-1">
                   {lineCost !== null ? (
-                    <span className="text-xs text-amber-700 font-medium">
+                    <span className="text-xs text-[#d43a6a] font-medium">
                       {formatMXN(lineCost)}
                     </span>
                   ) : (
@@ -322,7 +322,7 @@ export default function RecetaForm({ products, ingredients, prices, action, defa
                 <span className="text-gray-500">
                   Costo por {yieldUnit === 'pza' ? 'pieza' : yieldUnit}
                 </span>
-                <span className="font-semibold text-amber-700">{formatUnitPrice(costPerPiece)}</span>
+                <span className="font-semibold text-[#d43a6a]">{formatUnitPrice(costPerPiece)}</span>
               </div>
             )}
           </div>
@@ -341,7 +341,7 @@ export default function RecetaForm({ products, ingredients, prices, action, defa
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 text-sm transition-colors disabled:opacity-60"
+          className="flex-1 rounded-lg bg-[#ed507c] hover:bg-[#d43a6a] text-white font-medium py-2.5 text-sm transition-colors disabled:opacity-60"
         >
           {pending ? 'Guardando…' : 'Guardar receta'}
         </button>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useMemo } from 'react'
 import Link from 'next/link'
@@ -47,7 +47,7 @@ export default function IngredienteForm({ categories, prepRecipes, action, defau
   }, [presentationQty, purchasePrice, baseUnit, presentationUnit, isEditing])
 
   const inputClass =
-    'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400'
+    'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]'
 
   return (
     <form action={formAction} className="space-y-5">
@@ -144,7 +144,7 @@ export default function IngredienteForm({ categories, prepRecipes, action, defau
             ))}
           </select>
           {isPrep && (
-            <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+            <p className="text-xs text-[#d43a6a] bg-pink-50 rounded-lg px-3 py-2">
               El precio de este ingrediente se calculará desde la receta seleccionada.
               No es necesario registrar precio de compra.
             </p>
@@ -226,7 +226,7 @@ export default function IngredienteForm({ categories, prepRecipes, action, defau
             <div
               className={`rounded-lg px-3 py-2 text-sm font-medium ${
                 unitPricePreview.ok
-                  ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                  ? 'bg-pink-50 text-[#b02558] border border-pink-200'
                   : 'bg-red-50 text-red-700 border border-red-200'
               }`}
             >
@@ -249,7 +249,7 @@ export default function IngredienteForm({ categories, prepRecipes, action, defau
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 text-sm transition-colors disabled:opacity-60"
+          className="flex-1 rounded-lg bg-[#ed507c] hover:bg-[#d43a6a] text-white font-medium py-2.5 text-sm transition-colors disabled:opacity-60"
         >
           {pending ? 'Guardando…' : isEditing ? `Actualizar ${entityLabel}` : `Guardar ${entityLabel}`}
         </button>

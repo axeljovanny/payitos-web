@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useMemo } from 'react'
 import { addPriceEntry } from '@/lib/ingredientes/actions'
@@ -26,7 +26,7 @@ export default function PriceEntryForm({ ingredientId, baseUnit, basePath }: Pro
   }, [presentationQty, purchasePrice, presentationUnit, baseUnit])
 
   const inputClass =
-    'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400'
+    'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]'
 
   return (
     <form action={formAction} className="space-y-3">
@@ -106,7 +106,7 @@ export default function PriceEntryForm({ ingredientId, baseUnit, basePath }: Pro
         <div
           className={`rounded-lg px-3 py-2 text-xs font-medium ${
             unitPricePreview.ok
-              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+              ? 'bg-pink-50 text-[#b02558] border border-pink-200'
               : 'bg-red-50 text-red-700 border border-red-200'
           }`}
         >
@@ -123,7 +123,7 @@ export default function PriceEntryForm({ ingredientId, baseUnit, basePath }: Pro
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg border border-amber-300 text-amber-700 font-medium py-2 text-sm hover:bg-amber-50 transition-colors disabled:opacity-60"
+        className="w-full rounded-lg border border-pink-300 text-[#d43a6a] font-medium py-2 text-sm hover:bg-pink-50 transition-colors disabled:opacity-60"
       >
         {pending ? 'Guardando…' : 'Agregar precio'}
       </button>

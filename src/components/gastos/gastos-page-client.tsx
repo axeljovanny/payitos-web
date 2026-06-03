@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -33,7 +33,7 @@ function VariableExpenseCard({ item }: { item: VariableExpense }) {
 
   return (
     <div className={`bg-white rounded-2xl border transition-shadow ${
-      open ? 'border-amber-200 shadow-md' : 'border-gray-200 shadow-sm'
+      open ? 'border-pink-200 shadow-md' : 'border-gray-200 shadow-sm'
     }`}>
       <button
         type="button"
@@ -63,7 +63,7 @@ function VariableExpenseCard({ item }: { item: VariableExpense }) {
           <div className="flex flex-col gap-2 pt-1">
             <Link
               href={`/admin/gastos/variable/${item.id}/editar`}
-              className="w-full text-center rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 text-sm transition-colors"
+              className="w-full text-center rounded-xl bg-[#ed507c] hover:bg-[#d43a6a] text-white font-semibold py-3 text-sm transition-colors"
             >
               Editar gasto
             </Link>
@@ -90,7 +90,7 @@ function FixedCostCard({ item }: { item: FixedCost }) {
   return (
     <div className={`bg-white rounded-2xl border transition-shadow ${
       item.active
-        ? open ? 'border-amber-200 shadow-md' : 'border-gray-200 shadow-sm'
+        ? open ? 'border-pink-200 shadow-md' : 'border-gray-200 shadow-sm'
         : 'border-gray-100 opacity-60'
     }`}>
       <button
@@ -137,7 +137,7 @@ function FixedCostCard({ item }: { item: FixedCost }) {
               <>
                 <Link
                   href={`/admin/gastos/fijos/${item.id}/editar`}
-                  className="w-full text-center rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 text-sm transition-colors"
+                  className="w-full text-center rounded-xl bg-[#ed507c] hover:bg-[#d43a6a] text-white font-semibold py-3 text-sm transition-colors"
                 >
                   Editar gasto fijo
                 </Link>
@@ -151,7 +151,7 @@ function FixedCostCard({ item }: { item: FixedCost }) {
             ) : (
               <form action={reactivateFixedCost}>
                 <input type="hidden" name="id" value={item.id} />
-                <button type="submit" className="w-full rounded-xl border border-amber-300 text-amber-700 hover:bg-amber-50 font-medium py-3 text-sm transition-colors">
+                <button type="submit" className="w-full rounded-xl border border-pink-300 text-[#d43a6a] hover:bg-pink-50 font-medium py-3 text-sm transition-colors">
                   Reactivar
                 </button>
               </form>
@@ -181,7 +181,7 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
   return (
     <div className={`bg-white rounded-2xl border transition-shadow ${
       member.active
-        ? open ? 'border-amber-200 shadow-md' : 'border-gray-200 shadow-sm'
+        ? open ? 'border-pink-200 shadow-md' : 'border-gray-200 shadow-sm'
         : 'border-gray-100 opacity-60'
     }`}>
       <button
@@ -261,7 +261,7 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
               <>
                 <Link
                   href={`/admin/gastos/integrantes/${member.id}/editar`}
-                  className="w-full text-center rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 text-sm transition-colors"
+                  className="w-full text-center rounded-xl bg-[#ed507c] hover:bg-[#d43a6a] text-white font-semibold py-3 text-sm transition-colors"
                 >
                   Editar integrante
                 </Link>
@@ -275,7 +275,7 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
             ) : (
               <form action={reactivateTeamMember}>
                 <input type="hidden" name="id" value={member.id} />
-                <button type="submit" className="w-full rounded-xl border border-amber-300 text-amber-700 hover:bg-amber-50 font-medium py-3 text-sm transition-colors">
+                <button type="submit" className="w-full rounded-xl border border-pink-300 text-[#d43a6a] hover:bg-pink-50 font-medium py-3 text-sm transition-colors">
                   Reactivar
                 </button>
               </form>
@@ -301,7 +301,7 @@ function EmptyState({ label, href }: { label: string; href: string }) {
   return (
     <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center space-y-3">
       <p className="text-sm text-gray-500">Sin registros.</p>
-      <Link href={href} className="inline-block rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold px-5 py-2.5 text-sm transition-colors">
+      <Link href={href} className="inline-block rounded-xl bg-[#ed507c] hover:bg-[#d43a6a] text-white font-semibold px-5 py-2.5 text-sm transition-colors">
         {label}
       </Link>
     </div>
@@ -358,8 +358,8 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
   return (
     <div className="space-y-5">
       {/* Summary */}
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
-        <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Overhead mensual estimado</p>
+      <div className="bg-pink-50 border border-pink-200 rounded-2xl p-4 space-y-3">
+        <p className="text-xs font-semibold text-[#d43a6a] uppercase tracking-wide">Overhead mensual estimado</p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="text-center">
             <p className="text-xs text-gray-500">Variables (mes)</p>
@@ -374,8 +374,8 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
             <p className="text-sm font-bold text-gray-800 tabular-nums">{formatMXN(totalSueldos)}</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-amber-700 font-semibold">Total</p>
-            <p className="text-base font-bold text-amber-800 tabular-nums">{formatMXN(totalOverhead)}</p>
+            <p className="text-xs text-[#d43a6a] font-semibold">Total</p>
+            <p className="text-base font-bold text-[#b02558] tabular-nums">{formatMXN(totalOverhead)}</p>
           </div>
         </div>
       </div>
@@ -389,13 +389,13 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
             onClick={() => setTab(t.id)}
             className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
               tab === t.id
-                ? 'bg-white text-amber-700 shadow-sm'
+                ? 'bg-white text-[#d43a6a] shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             {t.label}
             {tabCount[t.id] > 0 && (
-              <span className={`ml-1 text-xs ${tab === t.id ? 'text-amber-500' : 'text-gray-400'}`}>
+              <span className={`ml-1 text-xs ${tab === t.id ? 'text-[#ed507c]' : 'text-gray-400'}`}>
                 {tabCount[t.id]}
               </span>
             )}
@@ -417,7 +417,7 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
             </div>
             <Link
               href="/admin/gastos/variable/nuevo"
-              className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-2 transition-colors"
+              className="rounded-xl bg-[#ed507c] hover:bg-[#d43a6a] text-white text-xs font-semibold px-3 py-2 transition-colors"
             >
               Agregar gasto
             </Link>
@@ -443,7 +443,7 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
             </div>
             <Link
               href="/admin/gastos/fijos/nuevo"
-              className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-2 transition-colors"
+              className="rounded-xl bg-[#ed507c] hover:bg-[#d43a6a] text-white text-xs font-semibold px-3 py-2 transition-colors"
             >
               Agregar gasto fijo
             </Link>
@@ -468,7 +468,7 @@ export default function GastosPageClient({ variableExpenses, fixedCosts, teamMem
             </div>
             <Link
               href="/admin/gastos/integrantes/nuevo"
-              className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-2 transition-colors"
+              className="rounded-xl bg-[#ed507c] hover:bg-[#d43a6a] text-white text-xs font-semibold px-3 py-2 transition-colors"
             >
               Agregar integrante
             </Link>

@@ -1,4 +1,4 @@
-// PÁGINA TEMPORAL DE DEBUG — eliminar antes de producción
+﻿// PÁGINA TEMPORAL DE DEBUG — eliminar antes de producción
 // Accesible en: /admin/debug (protegida por requireRole('Admin') del layout)
 
 import { createClient } from '@/lib/supabase/server'
@@ -141,7 +141,7 @@ export default async function DebugPage() {
         </table>
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800 space-y-1">
+      <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 text-xs text-[#b02558] space-y-1">
         <p className="font-semibold">Resultados esperados DESPUÉS del fix:</p>
         <p>• current_user_role() = <code>Admin</code></p>
         <p>• is_admin() = <code>true</code></p>

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import type { DailyView } from '@/lib/inventory/types'
 
 interface Props {
@@ -21,10 +22,19 @@ function formatDateShort(iso: string): string {
   })
 }
 
-const SHEET_STATUS: Record<string, { label: string; className: string }> = {
-  pending: { label: 'Pendiente', className: 'bg-gray-100 text-gray-600' },
-  in_progress: { label: 'En progreso', className: 'bg-blue-100 text-blue-700' },
-  completed: { label: 'Completada', className: 'bg-green-100 text-green-700' },
+const SHEET_STATUS: Record<string, { label: string; style: React.CSSProperties }> = {
+  pending: {
+    label: 'Pendiente',
+    style: { background: 'var(--border-subtle)', color: 'var(--ink-muted)' },
+  },
+  in_progress: {
+    label: 'En progreso',
+    style: { background: 'var(--brand-light)', color: 'var(--brand-dark)' },
+  },
+  completed: {
+    label: 'Completada',
+    style: { background: 'var(--brand-cream)', color: 'var(--brand-dark)' },
+  },
 }
 
 const COOKING_LABELS: Record<string, string> = {
@@ -43,14 +53,14 @@ const SPECIAL_ORDER_STATUS: Record<string, string> = {
   cancelled: 'Cancelado',
 }
 
-function itemStatus(planned: number, produced: number) {
+function itemStatus(planned: number, produced: number): { label: string; style: React.CSSProperties } {
   if (planned > 0 && produced >= planned) {
-    return { label: 'Listo', className: 'text-green-600' }
+    return { label: 'Listo', style: { color: 'var(--brand-dark)' } }
   }
   if (produced > 0) {
-    return { label: 'En proceso', className: 'text-amber-600' }
+    return { label: 'En proceso', style: { color: 'var(--brand)' } }
   }
-  return { label: 'Pendiente', className: 'text-gray-400' }
+  return { label: 'Pendiente', style: { color: 'var(--ink-faint)' } }
 }
 
 export default function DailySheetView({ view }: Props) {
@@ -66,10 +76,10 @@ export default function DailySheetView({ view }: Props) {
       {/* ── Header ── */}
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h1 className="text-xl font-bold text-gray-800 capitalize">
+          <h1 className="text-xl font-bold capitalize" style={{ color: 'var(--foreground)' }}>
             {formatDateLong(date)}
           </h1>
-          <p className="text-sm text-gray-400 mt-0.5">
+          <p className="text-sm mt-0.5" style={{ color: 'var(--ink-faint)' }}>
             {items.length === 0
               ? 'Sin producción planeada'
               : `${totalProduced} / ${totalPlanned} piezas`}
@@ -77,9 +87,8 @@ export default function DailySheetView({ view }: Props) {
         </div>
         {sheet && (
           <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-              SHEET_STATUS[sheet.status]?.className ?? 'bg-gray-100 text-gray-500'
-            }`}
+            className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+            style={SHEET_STATUS[sheet.status]?.style ?? { background: 'var(--border-subtle)', color: 'var(--ink-muted)' }}
           >
             {SHEET_STATUS[sheet.status]?.label ?? sheet.status}
           </span>
@@ -88,20 +97,38 @@ export default function DailySheetView({ view }: Props) {
 
       {/* ── Production list ── */}
       {items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
-          <p className="text-sm text-gray-500">No hay producción planeada para hoy.</p>
-          <p className="text-xs text-gray-400 mt-1">
+        <div
+          className="rounded-xl px-6 py-12 text-center"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)' }}
+        >
+          <Image
+            src="/icono-payitos-blush.svg"
+            alt=""
+            width={64}
+            height={64}
+            className="mx-auto mb-4 opacity-70"
+          />
+          <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
+            Sin producción planeada para hoy.
+          </p>
+          <p className="text-xs mt-1" style={{ color: 'var(--ink-faint)' }}>
             Configura el plan semanal desde el módulo de Planificación.
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div
+          className="rounded-xl overflow-hidden"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+        >
           <div className="px-4 pt-4 pb-2 flex items-center gap-2">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--ink-faint)' }}>
               Producción del día
             </p>
             {fromWeeklyPlan && (
-              <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+              <span
+                className="text-xs px-2 py-0.5 rounded-full"
+                style={{ background: 'var(--brand-light)', color: 'var(--brand-dark)' }}
+              >
                 del plan semanal
               </span>
             )}
@@ -109,41 +136,42 @@ export default function DailySheetView({ view }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-t border-gray-100 bg-gray-50">
-                  <th className="text-left px-4 py-2 font-medium text-gray-500">Producto</th>
-                  <th className="text-right px-4 py-2 font-medium text-gray-500 whitespace-nowrap">
+                <tr style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--border-subtle)' }}>
+                  <th className="text-left px-4 py-2 font-medium" style={{ color: 'var(--ink-muted)' }}>Producto</th>
+                  <th className="text-right px-4 py-2 font-medium whitespace-nowrap" style={{ color: 'var(--ink-muted)' }}>
                     Plan
                   </th>
-                  <th className="text-right px-4 py-2 font-medium text-gray-500 whitespace-nowrap">
+                  <th className="text-right px-4 py-2 font-medium whitespace-nowrap" style={{ color: 'var(--ink-muted)' }}>
                     Hecho
                   </th>
-                  <th className="text-right px-4 py-2 font-medium text-gray-500">Estado</th>
+                  <th className="text-right px-4 py-2 font-medium" style={{ color: 'var(--ink-muted)' }}>Estado</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item) => {
-                  const { label, className } = itemStatus(
+                  const { label, style: statusStyle } = itemStatus(
                     item.quantity_planned,
                     item.quantity_produced
                   )
                   return (
-                    <tr key={item.product_id} className="border-t border-gray-100">
-                      <td className="px-4 py-2.5 text-gray-800">
+                    <tr key={item.product_id} style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                      <td className="px-4 py-2.5" style={{ color: 'var(--foreground)' }}>
                         <span className="font-medium">{item.product_name}</span>
                         {item.cooking_type && (
-                          <span className="ml-1.5 text-xs text-gray-400">
+                          <span className="ml-1.5 text-xs" style={{ color: 'var(--ink-faint)' }}>
                             {COOKING_LABELS[item.cooking_type] ?? item.cooking_type}
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right text-gray-500">
+                      <td className="px-4 py-2.5 text-right" style={{ color: 'var(--ink-muted)' }}>
                         {item.quantity_planned}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-gray-800">
+                      <td className="px-4 py-2.5 text-right font-semibold" style={{ color: 'var(--foreground)' }}>
                         {item.quantity_produced}
                       </td>
                       <td
-                        className={`px-4 py-2.5 text-right text-xs font-medium whitespace-nowrap ${className}`}
+                        className="px-4 py-2.5 text-right text-xs font-medium whitespace-nowrap"
+                        style={statusStyle}
                       >
                         {label}
                       </td>
@@ -152,12 +180,12 @@ export default function DailySheetView({ view }: Props) {
                 })}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-gray-200 bg-gray-50">
-                  <td className="px-4 py-2 font-semibold text-gray-700">Total</td>
-                  <td className="px-4 py-2 text-right font-semibold text-gray-500">
+                <tr style={{ borderTop: '2px solid var(--border)', background: 'var(--border-subtle)' }}>
+                  <td className="px-4 py-2 font-semibold" style={{ color: 'var(--foreground)' }}>Total</td>
+                  <td className="px-4 py-2 text-right font-semibold" style={{ color: 'var(--ink-muted)' }}>
                     {totalPlanned}
                   </td>
-                  <td className="px-4 py-2 text-right font-semibold text-gray-800">
+                  <td className="px-4 py-2 text-right font-semibold" style={{ color: 'var(--foreground)' }}>
                     {totalProduced}
                   </td>
                   <td />
@@ -171,22 +199,26 @@ export default function DailySheetView({ view }: Props) {
       {/* ── Special orders ── */}
       {special_orders.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+          <p className="text-xs font-semibold uppercase tracking-wide px-1" style={{ color: 'var(--ink-faint)' }}>
             Órdenes especiales de hoy
           </p>
           {special_orders.map((order) => (
             <div
               key={order.id}
-              className="bg-white rounded-xl border border-amber-200 px-4 py-3"
+              className="rounded-xl px-4 py-3"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="font-medium text-gray-800">{order.customer_name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="font-medium" style={{ color: 'var(--foreground)' }}>{order.customer_name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--ink-faint)' }}>
                     Entrega: {formatDateShort(order.delivery_date)}
                   </p>
                 </div>
-                <span className="shrink-0 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                <span
+                  className="shrink-0 text-xs px-2 py-0.5 rounded-full"
+                  style={{ background: 'var(--brand-light)', color: 'var(--brand-dark)' }}
+                >
                   {SPECIAL_ORDER_STATUS[order.status] ?? order.status}
                 </span>
               </div>
@@ -194,10 +226,10 @@ export default function DailySheetView({ view }: Props) {
               {order.special_order_items.length > 0 && (
                 <ul className="mt-2 space-y-0.5">
                   {order.special_order_items.map((item) => (
-                    <li key={item.id} className="text-sm text-gray-600">
+                    <li key={item.id} className="text-sm" style={{ color: 'var(--ink-muted)' }}>
                       • {item.product_name} × {item.quantity}
                       {item.notes && (
-                        <span className="text-xs text-gray-400 ml-1">({item.notes})</span>
+                        <span className="text-xs ml-1" style={{ color: 'var(--ink-faint)' }}>({item.notes})</span>
                       )}
                     </li>
                   ))}
@@ -205,7 +237,7 @@ export default function DailySheetView({ view }: Props) {
               )}
 
               {order.notes && (
-                <p className="text-xs text-gray-400 mt-2 italic">{order.notes}</p>
+                <p className="text-xs mt-2 italic" style={{ color: 'var(--ink-faint)' }}>{order.notes}</p>
               )}
             </div>
           ))}

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 
 function ChevronLeftIcon() {
   return (
@@ -18,7 +18,7 @@ export default function BackButton({ href, label }: Props) {
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-1 text-amber-700 hover:text-amber-900 -ml-1 py-1 pr-2 rounded-lg active:bg-amber-50 transition-colors"
+      className="inline-flex items-center gap-1 text-[#d43a6a] hover:text-[#8b1a42] -ml-1 py-1 pr-2 rounded-lg active:bg-pink-50 transition-colors"
     >
       <ChevronLeftIcon />
       <span className="text-sm font-semibold">{label}</span>

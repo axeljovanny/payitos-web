@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
@@ -97,7 +97,7 @@ export default function InsumosPageClient({ insumos, basePath, showImport = fals
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar insumo por nombre…"
-          className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-10 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
+          className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-10 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed507c]"
         />
         {query && (
           <button
@@ -116,7 +116,7 @@ export default function InsumosPageClient({ insumos, basePath, showImport = fals
           <button
             type="button"
             onClick={() => exportToCSV(insumos)}
-            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-amber-700 transition-colors py-1 px-2 rounded-lg hover:bg-amber-50"
+            className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#d43a6a] transition-colors py-1 px-2 rounded-lg hover:bg-pink-50"
           >
             <DownloadIcon />
             Exportar CSV
@@ -163,7 +163,7 @@ export default function InsumosPageClient({ insumos, basePath, showImport = fals
         <div className="pt-2 border-t border-gray-100">
           <Link
             href={`${basePath}/importar`}
-            className="block w-full text-center rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-amber-300 hover:text-amber-700 font-medium py-3 text-sm transition-colors"
+            className="block w-full text-center rounded-xl border border-dashed border-gray-300 text-gray-500 hover:border-pink-300 hover:text-[#d43a6a] font-medium py-3 text-sm transition-colors"
           >
             Carga masiva desde CSV / JSON
           </Link>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useActionState } from 'react'
 import { bulkImportInsumos } from '@/lib/ingredientes/import-action'
@@ -157,7 +157,7 @@ export default function InsumoImportForm() {
       {!preview && (
         <div>
           <label
-            className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-gray-300 bg-white p-10 cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors"
+            className="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-gray-300 bg-white p-10 cursor-pointer hover:border-pink-400 hover:bg-pink-50 transition-colors"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
               className="w-10 h-10 text-gray-300">
@@ -279,7 +279,7 @@ Aceite,lt,Casa López,Garrafa 5 lt,5,lt,190,2026-02-01`}</pre>
               <button
                 type="submit"
                 disabled={pending}
-                className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3.5 text-sm transition-colors disabled:opacity-60"
+                className="w-full rounded-xl bg-[#ed507c] hover:bg-[#d43a6a] text-white font-semibold py-3.5 text-sm transition-colors disabled:opacity-60"
               >
                 {pending ? 'Importando…' : `Confirmar importación de ${validRows.length} insumo(s)`}
               </button>

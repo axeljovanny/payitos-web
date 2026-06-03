@@ -6,8 +6,8 @@ export default async function AdminCostosPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-gray-800">Catálogo de costos</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>Catálogo de costos</h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--ink-muted)' }}>
           Costo estimado por pieza basado en ingredientes y recetas activas.
         </p>
       </div>

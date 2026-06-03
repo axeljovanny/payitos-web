@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState } from 'react'
 import Link from 'next/link'
@@ -23,7 +23,7 @@ export default function IntegranteForm({ action, defaultValues }: Props) {
   const monthlyPreview = weeklyWage ? weeklyToMonthly(Number(weeklyWage)) : null
 
   const inputClass =
-    'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400'
+    'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]'
 
   return (
     <form action={formAction} className="space-y-5">
@@ -126,7 +126,7 @@ export default function IntegranteForm({ action, defaultValues }: Props) {
             className={inputClass}
           />
           {monthlyPreview != null && monthlyPreview > 0 && (
-            <p className="mt-1.5 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+            <p className="mt-1.5 text-xs text-[#d43a6a] bg-pink-50 rounded-lg px-3 py-2">
               ≈ {formatMXN(monthlyPreview)} / mes
             </p>
           )}
@@ -158,7 +158,7 @@ export default function IntegranteForm({ action, defaultValues }: Props) {
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 text-sm transition-colors disabled:opacity-60"
+          className="flex-1 rounded-lg bg-[#ed507c] hover:bg-[#d43a6a] text-white font-medium py-2.5 text-sm transition-colors disabled:opacity-60"
         >
           {pending ? 'Guardando…' : isEditing ? 'Actualizar integrante' : 'Guardar integrante'}
         </button>

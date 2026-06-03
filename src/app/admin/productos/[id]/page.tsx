@@ -69,7 +69,7 @@ export default async function ProductoDetailPage({ params }: Props) {
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Receta</p>
           <Link
             href={`/admin/productos/${id}/receta`}
-            className="text-xs font-medium text-amber-700 hover:text-amber-900"
+            className="text-xs font-medium text-[#d43a6a] hover:text-[#8b1a42]"
           >
             {recipe ? 'Editar receta' : 'Crear receta'}
           </Link>
@@ -102,7 +102,7 @@ export default async function ProductoDetailPage({ params }: Props) {
         </Link>
         <Link
           href={`/admin/costos/${id}`}
-          className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 text-sm text-center transition-colors"
+          className="rounded-lg bg-[#ed507c] hover:bg-[#d43a6a] text-white font-medium py-2.5 text-sm text-center transition-colors"
         >
           Ver costos →
         </Link>
@@ -119,7 +119,7 @@ export default async function ProductoDetailPage({ params }: Props) {
         ) : (
           <form action={reactivateProducto}>
             <input type="hidden" name="id" value={product.id} />
-            <button type="submit" className="text-xs font-medium text-amber-700 hover:text-amber-900">
+            <button type="submit" className="text-xs font-medium text-[#d43a6a] hover:text-[#8b1a42]">
               Reactivar producto
             </button>
           </form>

@@ -18,21 +18,27 @@ export default async function AdminGastosPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Gastos</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>Gastos</h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--ink-muted)' }}>
             {activosCount} registro{activosCount !== 1 ? 's' : ''}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href="/admin/gastos/fijos/nuevo"
-            className="rounded-xl border border-amber-300 text-amber-700 hover:bg-amber-50 text-xs font-semibold px-3 py-2.5 transition-colors"
+            className="rounded-xl border text-xs font-semibold px-3 py-2.5 transition-colors active:scale-[0.97]"
+            style={{ borderColor: 'var(--border)', color: 'var(--ink-muted)' }}
           >
             + Fijo
           </Link>
           <Link
             href="/admin/gastos/variable/nuevo"
-            className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2.5 transition-colors"
+            className="rounded-xl text-sm font-bold px-4 py-2.5 transition-[transform,box-shadow] active:scale-[0.97]"
+            style={{
+              background: 'linear-gradient(180deg, #f06090 0%, #ed507c 100%)',
+              color: '#ffffe9',
+              boxShadow: '0 3px 10px rgba(237,80,124,0.30)',
+            }}
           >
             + Gasto
           </Link>

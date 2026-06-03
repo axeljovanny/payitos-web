@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import type { CostBreakdown } from '@/lib/costing/types'
 import { formatMXN, formatPercent } from '@/lib/costing/format'
 import MarginBadge from './margin-badge'
@@ -33,7 +33,7 @@ export default function CostoDetail({ breakdown, backPath }: Props) {
       <div>
         <Link
           href={backPath}
-          className="text-sm text-amber-700 hover:underline mb-3 inline-block"
+          className="text-sm text-[#d43a6a] hover:underline mb-3 inline-block"
         >
           ← Volver al catálogo
         </Link>

@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Payitos",
   description: "Sistema de gestión para Panadería Payitos",
+  icons: {
+    icon: '/icono-payitos-blush.svg',
+  },
 };
 
 export const viewport: Viewport = {

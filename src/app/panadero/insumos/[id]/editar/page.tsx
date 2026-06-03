@@ -102,12 +102,12 @@ export default async function EditarInsumoPanaderoPage({ params }: Props) {
                   </thead>
                   <tbody>
                     {priceHistory.map((entry, i) => (
-                      <tr key={entry.id} className={`border-t border-gray-100 ${i === 0 ? 'bg-amber-50' : ''}`}>
+                      <tr key={entry.id} className={`border-t border-gray-100 ${i === 0 ? 'bg-pink-50' : ''}`}>
                         <td className="px-4 py-3 text-gray-700">
                           <div className="font-medium">{entry.presentation_name}</div>
                           <div className="text-xs text-gray-400">
                             {entry.presentation_quantity} {entry.presentation_unit}
-                            {i === 0 && <span className="ml-2 text-amber-600 font-medium">· vigente</span>}
+                            {i === 0 && <span className="ml-2 text-[#ed507c] font-medium">· vigente</span>}
                           </div>
                           <div className="text-xs text-gray-400">{formatDate(entry.effective_from)}</div>
                         </td>
@@ -137,7 +137,7 @@ export default async function EditarInsumoPanaderoPage({ params }: Props) {
                 </table>
               </div>
               {priceHistory.length === 1 && (
-                <p className="px-4 py-2 text-xs text-amber-700 bg-amber-50 border-t border-amber-100">
+                <p className="px-4 py-2 text-xs text-[#d43a6a] bg-pink-50 border-t border-pink-100">
                   Solo hay un precio registrado. Eliminar lo dejará sin costo vigente.
                 </p>
               )}
@@ -158,7 +158,7 @@ export default async function EditarInsumoPanaderoPage({ params }: Props) {
       )}
 
       {isPrep && (
-        <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
+        <div className="rounded-2xl bg-pink-50 border border-pink-200 p-4 text-sm text-[#b02558]">
           Este insumo es una preparación — su costo se calcula automáticamente desde la receta vinculada.
         </div>
       )}

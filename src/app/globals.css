@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
+/* ── Modo claro ──────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand:          #ed507c;
+  --brand-dark:     #d43a6a;
+  --brand-light:    #fce8ef;
+  --brand-cream:    #ffffe9;
+
+  --background:     #ffffff;
+  --surface:        #ffffff;
+
+  --border:         #f0e6ea;
+  --border-subtle:  #f7f2f4;
+
+  --foreground:     #1a1012;
+  --ink-muted:      #6b5860;
+  --ink-faint:      #9a8c92;
 }
 
 @theme inline {
@@ -12,15 +25,207 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ── Modo oscuro: rosa fuerte de base, crema como acento ─────── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --brand:          #ffffe9;   /* crema = acción principal */
+    --brand-dark:     #fffff0;
+    --brand-light:    rgba(255,255,233,0.15);
+    --brand-cream:    #ed507c;
+
+    --background:     #c8305c;   /* rosa oscuro — fondo página */
+    --surface:        #ed507c;   /* rosa marca — superficies/cards */
+
+    --border:         rgba(255,255,233,0.20);
+    --border-subtle:  rgba(255,255,233,0.10);
+
+    --foreground:     #ffffe9;   /* crema — texto principal */
+    --ink-muted:      rgba(255,255,233,0.72);
+    --ink-faint:      rgba(255,255,233,0.45);
   }
+
+  /* Cards y superficies blancas → rosa marca */
+  .bg-white {
+    background-color: #ed507c !important;
+  }
+
+  /* Fondos grises → variantes crema-translúcida */
+  .bg-gray-50 { background-color: rgba(255,255,233,0.08) !important; }
+  .bg-gray-100 { background-color: rgba(255,255,233,0.14) !important; }
+  .bg-pink-50 { background-color: rgba(255,255,233,0.12) !important; }
+  .bg-pink-100 { background-color: rgba(255,255,233,0.20) !important; }
+
+  /* Texto → crema */
+  .text-gray-900, .text-gray-800 { color: #ffffe9 !important; }
+  .text-gray-700, .text-gray-600 { color: rgba(255,255,233,0.85) !important; }
+  .text-gray-500 { color: rgba(255,255,233,0.65) !important; }
+  .text-gray-400 { color: rgba(255,255,233,0.48) !important; }
+  .text-pink-200, .text-pink-300 { color: rgba(255,255,233,0.80) !important; }
+
+  /* Bordes → crema semitransparente */
+  .border-gray-100, .border-gray-200, .border-gray-300 {
+    border-color: rgba(255,255,233,0.20) !important;
+  }
+  .border-pink-100, .border-pink-200, .border-pink-300, .border-pink-400 {
+    border-color: rgba(255,255,233,0.28) !important;
+  }
+  .border-red-200 { border-color: rgba(255,160,160,0.35) !important; }
+
+  /* Botones de acción primarios (degradado rosa → crema en dark) */
+  [style*="linear-gradient(180deg, #f06090"] {
+    background: linear-gradient(180deg, #fffff5 0%, #ffffe9 100%) !important;
+    color: #d43a6a !important;
+    box-shadow: 0 4px 14px rgba(255,255,233,0.30), inset 0 1px 0 rgba(255,255,255,0.60) !important;
+  }
+
+  /* Botones outline de marca → borde crema, texto crema */
+  [style*="rgba(237,80,124,0.28)"] {
+    border-color: rgba(255,255,233,0.35) !important;
+    color: #ffffe9 !important;
+  }
+
+  /* Inputs y formularios */
+  input:not([type="submit"]):not([type="button"]),
+  select,
+  textarea {
+    background-color: rgba(255,255,233,0.12) !important;
+    color: #ffffe9 !important;
+    border-color: rgba(255,255,233,0.25) !important;
+  }
+  input::placeholder { color: rgba(255,255,233,0.40) !important; }
+  input:focus, select:focus, textarea:focus {
+    border-color: rgba(255,255,233,0.60) !important;
+    box-shadow: 0 0 0 2px rgba(255,255,233,0.15) !important;
+    background-color: rgba(255,255,233,0.18) !important;
+  }
+
+  /* Select: forzar color-scheme dark para que el dropdown nativo del OS
+     use fondo oscuro en las opciones. Sin esto el browser mezcla color
+     crema del CSS con el fondo blanco nativo → texto invisible. */
+  select {
+    color-scheme: dark;
+  }
+  option {
+    background-color: #1e0815;
+    color: #ffffe9;
+  }
+
+  /* Badges "inactivo" y neutros */
+  .bg-gray-100.text-gray-500 {
+    background-color: rgba(255,255,233,0.15) !important;
+    color: rgba(255,255,233,0.65) !important;
+  }
+
+  /* Error states */
+  .text-red-500, .text-red-600, .text-red-700 { color: #ffaaaa !important; }
+  .bg-red-50 { background-color: rgba(255,100,100,0.12) !important; }
+  .border-red-200 { border-color: rgba(255,120,120,0.30) !important; }
+
+  /* Hover sobre botones neutros */
+  .hover\:bg-gray-50:hover { background-color: rgba(255,255,233,0.10) !important; }
+  .hover\:bg-pink-50:hover { background-color: rgba(255,255,233,0.12) !important; }
+  .hover\:bg-red-50:hover { background-color: rgba(255,80,80,0.12) !important; }
+  .hover\:text-red-600:hover, .hover\:text-red-500:hover { color: #ffaaaa !important; }
+
+  /* Logo: rosa → crema en dark */
+  .logo-payitos {
+    filter: brightness(0) invert(1) sepia(1) saturate(0) brightness(1.05) !important;
+    /* Resultado: blanco-crema sobre fondo rosa */
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,233,0.25) !important; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,233,0.40) !important; }
 }
 
+/* ── Base ────────────────────────────────────────────────────── */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Focus ring — brand pink en modo claro */
+input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 2px rgba(237, 80, 124, 0.18) !important;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #f0d0dc; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #e0b8c8; }
+
+/* ── Login page entrance animations ─────────────────────────── */
+@keyframes login-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.login-brand-top    { animation: login-rise 0.65s cubic-bezier(0.23, 1, 0.32, 1) both; }
+.login-brand-bottom { animation: login-rise 0.65s cubic-bezier(0.23, 1, 0.32, 1) 0.07s both; }
+.login-mascot       { animation: login-rise 0.80s cubic-bezier(0.23, 1, 0.32, 1) 0.12s both; }
+.login-form-entrance{ animation: login-rise 0.70s cubic-bezier(0.23, 1, 0.32, 1) 0.15s both; }
+.login-error        { animation: login-rise 0.35s cubic-bezier(0.23, 1, 0.32, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .login-brand-top,
+  .login-brand-bottom,
+  .login-mascot,
+  .login-form-entrance,
+  .login-error { animation: none; }
+}
+
+/* ── Login button ─────────────────────────────────────────────── */
+.btn-login {
+  box-shadow:
+    0 4px 16px rgba(237, 80, 124, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transition:
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 10px 28px rgba(237, 80, 124, 0.52),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  }
+}
+
+.btn-login:active {
+  transform: scale(0.97);
+  box-shadow:
+    0 2px 8px rgba(237, 80, 124, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20);
+  transition-duration: 80ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-login { transition: none; }
+  .btn-login:active { transform: none; filter: brightness(0.92); }
+}
+
+/* ── Login inputs ─────────────────────────────────────────────── */
+.input-login {
+  transition:
+    border-color 150ms cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .input-login:hover:not(:focus) {
+    border-color: rgba(237, 80, 124, 0.42) !important;
+  }
 }

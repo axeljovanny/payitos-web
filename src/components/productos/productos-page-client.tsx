@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
@@ -45,7 +45,7 @@ function ProductoCard({ p }: { p: ProductRow }) {
         <div className="min-w-0">
           <Link
             href={`/admin/productos/${p.id}`}
-            className="font-medium text-gray-800 hover:text-amber-700 truncate block"
+            className="font-medium text-gray-800 hover:text-[#d43a6a] truncate block"
           >
             {p.name}
           </Link>
@@ -58,7 +58,7 @@ function ProductoCard({ p }: { p: ProductRow }) {
             <>
               <Link
                 href={`/admin/productos/${p.id}/editar`}
-                className="text-xs font-medium text-amber-700 hover:text-amber-900 px-2 py-1 rounded-lg hover:bg-amber-50 transition-colors"
+                className="text-xs font-medium text-[#d43a6a] hover:text-[#8b1a42] px-2 py-1 rounded-lg hover:bg-pink-50 transition-colors"
               >
                 Editar
               </Link>
@@ -78,7 +78,7 @@ function ProductoCard({ p }: { p: ProductRow }) {
               <input type="hidden" name="id" value={p.id} />
               <button
                 type="submit"
-                className="text-xs font-medium text-amber-700 hover:text-amber-900 px-2 py-1 rounded-lg hover:bg-amber-50 transition-colors"
+                className="text-xs font-medium text-[#d43a6a] hover:text-[#8b1a42] px-2 py-1 rounded-lg hover:bg-pink-50 transition-colors"
               >
                 Reactivar
               </button>
@@ -121,7 +121,7 @@ export default function ProductosPageClient({ productos }: Props) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar producto por nombre o categoría…"
-          className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-10 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
+          className="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-10 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed507c]"
         />
         {query && (
           <button

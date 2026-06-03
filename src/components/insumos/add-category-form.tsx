@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createCategory } from '@/lib/ingredientes/actions'
@@ -15,12 +15,12 @@ export default function AddCategoryForm() {
           name="name"
           required
           placeholder="ej. Harinas, Lácteos, Grasas…"
-          className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400"
+          className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]"
         />
         <button
           type="submit"
           disabled={pending}
-          className="shrink-0 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 py-2.5 text-sm transition-colors disabled:opacity-60"
+          className="shrink-0 rounded-xl bg-[#ed507c] hover:bg-[#d43a6a] text-white font-semibold px-4 py-2.5 text-sm transition-colors disabled:opacity-60"
         >
           {pending ? '…' : 'Agregar'}
         </button>

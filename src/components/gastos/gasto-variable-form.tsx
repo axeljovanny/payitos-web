@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import Link from 'next/link'
@@ -20,7 +20,7 @@ export default function GastoVariableForm({ action, defaultValues }: Props) {
   const isEditing = !!defaultValues?.id
 
   const inputClass =
-    'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400'
+    'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#ed507c]'
 
   return (
     <form action={formAction} className="space-y-5">
@@ -110,7 +110,7 @@ export default function GastoVariableForm({ action, defaultValues }: Props) {
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 text-sm transition-colors disabled:opacity-60"
+          className="flex-1 rounded-lg bg-[#ed507c] hover:bg-[#d43a6a] text-white font-medium py-2.5 text-sm transition-colors disabled:opacity-60"
         >
           {pending ? 'Guardando…' : isEditing ? 'Actualizar gasto' : 'Guardar gasto'}
         </button>
