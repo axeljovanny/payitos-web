@@ -139,9 +139,11 @@ export async function fetchDailyView(date?: string): Promise<DailyView> {
   const wStart = weekStartISO(targetDate)
   const dow = dayOfWeek(targetDate)
 
-  const [{ sheet, items: sheetItems }, { items: planItems }, specialOrders] = await Promise.all([
+  // Fetch sheet and special orders in parallel; defer the weekly plan query
+  // until we know the sheet is empty — avoids one Supabase round-trip on days
+  // that already have a production sheet.
+  const [{ sheet, items: sheetItems }, specialOrders] = await Promise.all([
     fetchDailySheet(targetDate),
-    fetchWeeklyPlan(wStart),
     fetchSpecialOrdersForRange(targetDate, targetDate),
   ])
 
@@ -160,6 +162,8 @@ export async function fetchDailyView(date?: string): Promise<DailyView> {
         source: 'sheet' as const,
       }))
   } else {
+    // No sheet for today — fall back to the weekly plan
+    const { items: planItems } = await fetchWeeklyPlan(wStart)
     productionItems = planItems
       .filter((item) => item.day_of_week === dow && item.quantity_planned > 0)
       .map((item) => ({

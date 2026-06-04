@@ -14,8 +14,6 @@ function getRolePath(role: string): string | null {
 }
 
 export async function proxy(request: NextRequest) {
-  // Mutable — recreated inside setAll so refreshed auth cookies propagate
-  // to the forwarded request headers downstream.
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -27,11 +25,9 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          // Write to request so downstream code sees the refreshed session
           cookiesToSet.forEach(({ name, value, options }) =>
             request.cookies.set({ name, value, ...options })
           )
-          // Recreate response with updated request, then set cookies on it
           response = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
@@ -41,17 +37,19 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Verify session — getUser() is the only safe call here (getSession() trusts
-  // the cookie without re-validating with the server). Also refreshes tokens
-  // if expired, writing back via setAll above.
+  // getSession() reads from the JWT cookie — no network round-trip to Supabase Auth
+  // on every request. It still handles token refresh via the refresh token when
+  // the access token is expired (write via setAll above). The layout's
+  // getCurrentUser() performs the definitive validation with getUser() once per
+  // render, so we don't need to duplicate that network call here.
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
 
   const path = request.nextUrl.pathname
 
   // ── Not authenticated ────────────────────────────────────────────────────
-  if (!user) {
+  if (!session) {
     if (path !== '/login') {
       return NextResponse.redirect(new URL('/login', request.url))
     }
@@ -59,21 +57,11 @@ export async function proxy(request: NextRequest) {
   }
 
   // ── Authenticated on /login → redirect to role dashboard ─────────────────
-  // Use the cookie fast path to avoid a DB round-trip on every page load.
-  // Fallback to RPC only when the cookie is absent (e.g. first load after
-  // cookie expiry). Role-route enforcement is left entirely to the layouts
-  // so that the cookie (proxy) and the RPC (layout) never disagree and
-  // create a redirect loop.
+  // Use the payitos-role cookie as fast path — set by the login action, removed
+  // on logout. Avoids a DB round-trip (current_user_role RPC) on every /login visit.
   if (path === '/login') {
     const roleCookie = request.cookies.get('payitos-role')?.value
-    let role: string | null = roleCookie ?? null
-
-    if (!role) {
-      const { data } = await supabase.rpc('current_user_role')
-      role = data ?? null
-    }
-
-    const destination = role ? getRolePath(role) : null
+    const destination = roleCookie ? getRolePath(roleCookie) : null
     if (destination) {
       return NextResponse.redirect(new URL(destination, request.url))
     }
@@ -84,7 +72,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on every path except Next.js internals, static files, and public assets
     '/((?!api|_next/static|_next/image|favicon\\.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|eot)$).*)',
   ],
 }

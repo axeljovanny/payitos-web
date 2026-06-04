@@ -14,17 +14,20 @@ export interface CurrentUser {
 export const getCurrentUser = cache(async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createClient()
 
+  // getSession() validates the JWT locally (no network call to Supabase Auth
+  // unless the token is expired and needs refreshing via the refresh token).
+  // The layout's requireRole calls this once per render; using getSession() here
+  // halves the auth round-trips vs. getUser() which always hits the Auth server.
   const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
 
-  if (authError || !user) return null
+  if (!session?.user) return null
+  const user = session.user
 
-  // Fast path: cookie set by the login action (httpOnly, server-set — safe to trust).
-  // Fallback: SECURITY DEFINER RPC when cookie is absent (e.g. after expiry).
-  // Avoids a loop where current_user_role() returns null if auth.uid() doesn't
-  // match public.users.id due to seeded-ID mismatch.
+  // Fast path: payitos-role cookie is set server-side on login and removed on
+  // logout — safe to trust within the same request. Falls back to RPC only on
+  // first load after cookie expiry.
   const cookieStore = await cookies()
   let roleName: string | null = cookieStore.get('payitos-role')?.value ?? null
   if (!roleName) {
@@ -33,7 +36,7 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Cur
   }
   if (!roleName) return null
 
-  // public.users read may be blocked by RLS; fall back to email prefix as name
+  // Profile name from public.users — RLS-protected; falls back to email prefix.
   const { data: profile } = await supabase
     .from('users')
     .select('name')
