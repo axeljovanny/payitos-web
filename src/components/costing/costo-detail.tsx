@@ -16,8 +16,11 @@ const COOKING_LABELS: Record<string, string> = {
 }
 
 export default function CostoDetail({ breakdown, backPath }: Props) {
-  const { product, recipe, lines, batch_cost, cost_per_piece, total_cost_per_piece, margin_percent, missing_prices, is_estimated, status } =
-    breakdown
+  const {
+    product, recipe, lines, batch_cost, cost_per_piece,
+    labor_cost_per_piece, overhead_cost_per_piece, total_cost_per_piece,
+    margin_percent, missing_prices, is_estimated, status,
+  } = breakdown
 
   const effectiveCostPP = total_cost_per_piece ?? cost_per_piece
   const suggestedPrice =
@@ -170,10 +173,39 @@ export default function CostoDetail({ breakdown, backPath }: Props) {
           Resumen
         </p>
         <div className="space-y-2 text-sm">
+          {/* Desglose del costo por pieza */}
           <div className="flex justify-between">
-            <span className="text-gray-500">Costo por pieza</span>
-            <span className="font-semibold text-gray-800">
+            <span className="text-gray-500">Ingredientes / pieza</span>
+            <span className="font-medium text-gray-700">
               {cost_per_piece != null ? formatMXN(cost_per_piece) : '—'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">
+              Mano de obra / pieza
+              {labor_cost_per_piece == null && (
+                <span className="text-gray-400 ml-1 text-xs">(sin sueldos registrados)</span>
+              )}
+            </span>
+            <span className="font-medium text-gray-700">
+              {labor_cost_per_piece != null ? formatMXN(labor_cost_per_piece) : '—'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">
+              Costos fijos / pieza
+              {overhead_cost_per_piece == null && (
+                <span className="text-gray-400 ml-1 text-xs">(sin gastos fijos)</span>
+              )}
+            </span>
+            <span className="font-medium text-gray-700">
+              {overhead_cost_per_piece != null ? formatMXN(overhead_cost_per_piece) : '—'}
+            </span>
+          </div>
+          <div className="border-t border-gray-100 pt-2 flex justify-between">
+            <span className="text-gray-600 font-medium">Costo total / pieza</span>
+            <span className="font-bold text-gray-900">
+              {total_cost_per_piece != null ? formatMXN(total_cost_per_piece) : (cost_per_piece != null ? formatMXN(cost_per_piece) : '—')}
             </span>
           </div>
           <div className="flex justify-between">
@@ -232,10 +264,10 @@ export default function CostoDetail({ breakdown, backPath }: Props) {
         )}
       </div>
 
-      {/* Nota costos pendientes */}
+      {/* Nota metodología */}
       <p className="text-xs text-gray-400 text-center">
-        Este cálculo incluye solo el costo de ingredientes.
-        Mano de obra, energía y costos fijos se integrarán en la siguiente fase.
+        El costo total incluye ingredientes, mano de obra (sueldos ÷ horas) y costos fijos
+        prorrateados. La mano de obra y los fijos se reparten entre las variantes de la corrida según sus piezas.
       </p>
     </div>
   )

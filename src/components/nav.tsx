@@ -67,6 +67,17 @@ function BookOpenIcon() {
   )
 }
 
+function LayersIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="w-5 h-5">
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </svg>
+  )
+}
+
 function CalendarIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
@@ -112,13 +123,13 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   Admin: [
     { href: '/admin/insumos', label: 'Insumos', Icon: TagIcon },
     { href: '/admin/productos', label: 'Productos', Icon: PackageIcon },
+    { href: '/admin/procesos', label: 'Procesos', Icon: LayersIcon },
     { href: '/admin/planeacion', label: 'Plan', Icon: CalendarIcon },
     { href: '/admin/costos', label: 'Costos', Icon: BarChartIcon },
   ],
   panadero: [
     { href: '/panadero', label: 'Producción', Icon: FlameIcon, exact: true },
     { href: '/panadero/planeacion', label: 'Plan', Icon: CalendarIcon },
-    { href: '/panadero/recetas', label: 'Recetas', Icon: BookOpenIcon },
     { href: '/panadero/insumos', label: 'Insumos', Icon: TagIcon },
   ],
   vendedor: [

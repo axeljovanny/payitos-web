@@ -3,12 +3,14 @@ import type { ProductRow } from '@/lib/costing/types'
 
 export type { ProductRow }
 
-export interface ActiveRecipeSummary {
-  id: string
-  batch_yield: number
+export interface ProductProcessSummary {
+  process_id: string
+  process_name: string
+  pieces: number              // piezas de ESTE producto por corrida
   cooking_type: string
-  production_time_hours: number
-  ingredient_count: number
+  calendar_time_hours: number | null
+  labor_hours_per_batch: number | null
+  output_count: number        // nº de variantes que produce la corrida
 }
 
 export async function fetchProductos(): Promise<ProductRow[]> {
@@ -35,32 +37,37 @@ export async function fetchProductoById(id: string): Promise<ProductRow | null> 
   return data as ProductRow | null
 }
 
-export async function fetchActiveRecipeForProduct(
+// Proceso activo que produce este producto (reemplaza la receta 1:1)
+export async function fetchProcessForProduct(
   productId: string
-): Promise<ActiveRecipeSummary | null> {
+): Promise<ProductProcessSummary | null> {
   const supabase = await createClient()
   const { data } = await supabase
-    .from('recipes')
-    .select('id, batch_yield, cooking_type, production_time_hours, recipe_ingredients(id)')
+    .from('process_outputs')
+    .select('pieces, processes!inner(id, name, cooking_type, active, calendar_time_hours, labor_hours_per_batch, process_outputs(id))')
     .eq('product_id', productId)
-    .eq('active', true)
+    .eq('processes.active', true)
+    .limit(1)
     .maybeSingle()
 
   if (!data) return null
 
   const raw = data as unknown as {
-    id: string
-    batch_yield: number
-    cooking_type: string
-    production_time_hours: number
-    recipe_ingredients: { id: string }[]
+    pieces: number
+    processes: {
+      id: string; name: string; cooking_type: string
+      calendar_time_hours: number | null; labor_hours_per_batch: number | null
+      process_outputs: { id: string }[]
+    }
   }
 
   return {
-    id: raw.id,
-    batch_yield: raw.batch_yield,
-    cooking_type: raw.cooking_type,
-    production_time_hours: raw.production_time_hours,
-    ingredient_count: raw.recipe_ingredients?.length ?? 0,
+    process_id: raw.processes.id,
+    process_name: raw.processes.name,
+    pieces: raw.pieces,
+    cooking_type: raw.processes.cooking_type,
+    calendar_time_hours: raw.processes.calendar_time_hours ?? null,
+    labor_hours_per_batch: raw.processes.labor_hours_per_batch ?? null,
+    output_count: raw.processes.process_outputs?.length ?? 1,
   }
 }

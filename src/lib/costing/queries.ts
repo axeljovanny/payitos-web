@@ -1,10 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
-import { calculateCost } from './calculator'
-import { convertUnit } from './units'
 import type {
   CostBreakdown,
   ProductRow,
-  RecipeRow,
+  IngredientCostLine,
+  CostStatus,
   IngredientCategoryRow,
   TeamMemberRow,
   FixedCostRow,
@@ -12,148 +11,18 @@ import type {
   LaborCostContext,
   OverheadCostContext,
 } from './types'
+import { fetchActiveProcessDetails } from '@/lib/procesos/queries'
+import { computeProcessCost, componentCost } from '@/lib/procesos/costing'
+import type { ProcessDetail } from '@/lib/procesos/types'
+import { fetchPrepsForCosting } from '@/lib/preparaciones/queries'
+import { computePrepCosts, type PrepCost, type UnitPrice } from '@/lib/preparaciones/costing'
+import { fetchLatestIngredientPrices } from '@/lib/ingredientes/queries'
 
-// Estimated monthly production hours used to amortize fixed costs per production hour.
-// 20 working days × 8 hours. Adjust once a config table exists.
+// 20 días × 8h. Ajustar cuando exista tabla de configuración.
 const MONTHLY_PRODUCTION_HOURS = 160
 
 const PRODUCT_FIELDS =
   'id, name, category, active, sale_price, target_margin_percent, default_batch_yield, production_time_hours, cooking_type'
-
-const RECIPE_FIELDS = `
-  id, product_id, batch_yield, yield_unit, production_time_hours, cooking_type, active,
-  recipe_ingredients (
-    id, ingredient_id, quantity, unit, waste_factor_percent,
-    ingredients ( id, name, base_unit, prep_recipe_id )
-  )
-`
-
-const RECIPE_FIELDS_FALLBACK = `
-  id, product_id, batch_yield, production_time_hours, cooking_type, active,
-  recipe_ingredients (
-    id, ingredient_id, quantity, unit, waste_factor_percent,
-    ingredients ( id, name, base_unit )
-  )
-`
-
-// Resolves ingredient prices from price history + prep recipe computation.
-async function resolveIngredientPrices(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  ingredientIds: string[],
-): Promise<Map<string, number>> {
-  if (!ingredientIds.length) return new Map()
-
-  const ingResult = await supabase
-    .from('ingredients')
-    .select('id, base_unit, prep_recipe_id')
-    .in('id', ingredientIds)
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let ingredientsData: any[] | null = ingResult.data
-  if (ingResult.error) {
-    const { data: fallback } = await supabase
-      .from('ingredients')
-      .select('id, base_unit')
-      .in('id', ingredientIds)
-    ingredientsData = fallback
-  }
-
-  const { data: priceHistory } = await supabase
-    .from('ingredient_price_history')
-    .select('ingredient_id, unit_price, effective_from')
-    .in('ingredient_id', ingredientIds)
-    .order('effective_from', { ascending: false })
-
-  const baseUnitMap = new Map<string, string>()
-  const prepRecipeMap = new Map<string, string>()
-  ingredientsData?.forEach((i: { id: string; base_unit: string; prep_recipe_id?: string | null }) => {
-    baseUnitMap.set(i.id, i.base_unit)
-    if (i.prep_recipe_id) prepRecipeMap.set(i.id, i.prep_recipe_id)
-  })
-
-  const result = new Map<string, number>()
-  priceHistory?.forEach((ph: { ingredient_id: string; unit_price: number }) => {
-    if (!result.has(ph.ingredient_id) && !prepRecipeMap.has(ph.ingredient_id)) {
-      result.set(ph.ingredient_id, Number(ph.unit_price))
-    }
-  })
-
-  if (prepRecipeMap.size === 0) return result
-
-  // Fetch source recipes for prep ingredients
-  const recipeIds = [...new Set(prepRecipeMap.values())]
-  const { data: prepRecipes } = await supabase
-    .from('recipes')
-    .select(`
-      id, batch_yield, yield_unit,
-      recipe_ingredients (
-        ingredient_id, quantity, unit, waste_factor_percent,
-        ingredients ( base_unit )
-      )
-    `)
-    .in('id', recipeIds)
-    .eq('active', true)
-
-  // Fetch prices for ingredients INSIDE prep recipes (one extra level only)
-  const innerIds = new Set<string>()
-  prepRecipes?.forEach((r: { recipe_ingredients: Array<{ ingredient_id: string }> }) => {
-    r.recipe_ingredients?.forEach((ri) => innerIds.add(ri.ingredient_id))
-  })
-
-  if (innerIds.size > 0) {
-    const { data: innerHistory } = await supabase
-      .from('ingredient_price_history')
-      .select('ingredient_id, unit_price, effective_from')
-      .in('ingredient_id', [...innerIds])
-      .order('effective_from', { ascending: false })
-
-    innerHistory?.forEach((ph: { ingredient_id: string; unit_price: number }) => {
-      if (!result.has(ph.ingredient_id)) {
-        result.set(ph.ingredient_id, Number(ph.unit_price))
-      }
-    })
-  }
-
-  // Compute each prep ingredient's unit price from its source recipe
-  for (const [ingId, recipeId] of prepRecipeMap) {
-    const recipe = prepRecipes?.find((r: { id: string }) => r.id === recipeId) as {
-      id: string
-      batch_yield: number
-      yield_unit: string
-      recipe_ingredients: Array<{
-        ingredient_id: string
-        quantity: number
-        unit: string
-        waste_factor_percent: number
-        ingredients: { base_unit: string } | null
-      }>
-    } | undefined
-
-    if (!recipe?.recipe_ingredients?.length) continue
-
-    let batchCost = 0
-    let valid = true
-
-    for (const ri of recipe.recipe_ingredients) {
-      const unitPrice = result.get(ri.ingredient_id)
-      if (unitPrice === undefined) { valid = false; break }
-      const baseUnit = ri.ingredients?.base_unit ?? ri.unit
-      const conv = convertUnit(ri.quantity, ri.unit, baseUnit)
-      if (!conv.ok) { valid = false; break }
-      batchCost += conv.value * (1 + ri.waste_factor_percent / 100) * unitPrice
-    }
-
-    if (!valid || batchCost === 0) continue
-
-    const baseUnit = baseUnitMap.get(ingId) ?? 'g'
-    const yieldConv = convertUnit(recipe.batch_yield, recipe.yield_unit ?? 'pza', baseUnit)
-    if (!yieldConv.ok || yieldConv.value <= 0) continue
-
-    result.set(ingId, batchCost / yieldConv.value)
-  }
-
-  return result
-}
 
 // ── Reference data ───────────────────────────────────────────────────────────
 
@@ -187,10 +56,6 @@ export async function fetchFixedCosts(): Promise<FixedCostRow[]> {
 }
 
 export async function fetchVariableExpenses(): Promise<VariableExpenseRow[]> {
-  // variable_expenses is a transactional ledger (expense_date, description, amount)
-  // — it has no amount_per_hour / amount_fixed overhead rate columns.
-  // Overhead from variable expenses is excluded from the cost engine until
-  // the rate model is defined.
   return []
 }
 
@@ -198,7 +63,6 @@ export async function fetchVariableExpenses(): Promise<VariableExpenseRow[]> {
 
 export async function fetchLaborCostContext(): Promise<LaborCostContext | null> {
   const supabase = await createClient()
-
   const { data: members, error } = await supabase
     .from('team_members')
     .select('current_weekly_wage, production_hours_per_week, sales_hours_per_week')
@@ -206,7 +70,6 @@ export async function fetchLaborCostContext(): Promise<LaborCostContext | null> 
 
   if (error || !members?.length) return null
 
-  // Derive hourly rate: weekly_wage / total_hours_per_week
   const rates: number[] = []
   for (const m of members as Array<{ current_weekly_wage: number; production_hours_per_week: number; sales_hours_per_week: number }>) {
     const weekly = Number(m.current_weekly_wage)
@@ -214,142 +77,194 @@ export async function fetchLaborCostContext(): Promise<LaborCostContext | null> 
     const hours = Number(m.production_hours_per_week) + Number(m.sales_hours_per_week)
     rates.push(weekly / (hours > 0 ? hours : 40))
   }
-
   if (!rates.length) return null
-  const average_hourly_rate = rates.reduce((sum, r) => sum + r, 0) / rates.length
+  const average_hourly_rate = rates.reduce((s, r) => s + r, 0) / rates.length
   return { average_hourly_rate }
 }
 
 export async function fetchOverheadCostContext(): Promise<OverheadCostContext | null> {
   const supabase = await createClient()
-
   const { data: fixedCosts } = await supabase
     .from('fixed_costs')
     .select('amount')
     .eq('active', true)
 
   const totalMonthlyFixed = (fixedCosts ?? []).reduce(
-    (sum: number, fc: { amount: number }) => sum + Number(fc.amount),
-    0
+    (sum: number, fc: { amount: number }) => sum + Number(fc.amount), 0
   )
-  // variable_expenses is a ledger table — no per-hour overhead rates available
-  const totalEnergyPerHour = ([] as Array<{ amount_per_hour: number | null }>).reduce(
-    (sum: number, ve: { amount_per_hour: number | null }) =>
-      sum + Number(ve.amount_per_hour ?? 0),
-    0
-  )
-
-  if (totalMonthlyFixed === 0 && totalEnergyPerHour === 0) return null
+  if (totalMonthlyFixed === 0) return null
 
   return {
     fixed_cost_per_hour: totalMonthlyFixed / MONTHLY_PRODUCTION_HOURS,
-    energy_cost_per_hour: totalEnergyPerHour,
+    energy_cost_per_hour: 0,
   }
+}
+
+// ── Construcción de CostBreakdown desde un proceso ────────────────────────────
+
+function emptyBreakdown(product: ProductRow): CostBreakdown {
+  return {
+    product, recipe: null, lines: [],
+    batch_cost: null, cost_per_piece: null,
+    labor_cost_per_piece: null, overhead_cost_per_piece: null, total_cost_per_piece: null,
+    margin_percent: null, is_estimated: false, missing_prices: [], status: 'no_recipe',
+  }
+}
+
+function buildBreakdownFromProcess(
+  product: ProductRow,
+  process: ProcessDetail,
+  prices: Record<string, UnitPrice>,
+  prepCosts: Map<string, PrepCost>,
+  laborCtx: LaborCostContext | null,
+  overheadCtx: OverheadCostContext | null,
+): CostBreakdown {
+  const overheadPerHour = overheadCtx ? overheadCtx.fixed_cost_per_hour + overheadCtx.energy_cost_per_hour : null
+
+  const cost = computeProcessCost({
+    outputs: process.outputs.map((o) => ({ product_id: o.product_id, pieces: o.pieces })),
+    components: process.components.map((c) => ({
+      label: c.label, source_type: c.source_type,
+      ingredient_id: c.ingredient_id, preparation_id: c.preparation_id,
+      quantity: c.quantity, unit: c.unit, waste_factor_percent: c.waste_factor_percent,
+      allocation_mode: c.allocation_mode, consumers: c.consumers,
+    })),
+    laborHours: process.labor_hours_per_batch ?? 0,
+    calendarHours: process.calendar_time_hours ?? 0,
+    prices, prepCosts,
+    hourlyLaborRate: laborCtx?.average_hourly_rate ?? null,
+    overheadPerHour,
+  })
+
+  const output = process.outputs.find((o) => o.product_id === product.id)!
+  const mine = cost.per_output.find((o) => o.product_id === product.id)
+  const pieces = output.pieces
+
+  // Líneas: cada componente que consume esta variante, con su costo asignado
+  const lines: IngredientCostLine[] = []
+  const missing: string[] = []
+  for (const c of process.components) {
+    // Porción por variante
+    const weightByProduct = new Map<string, number>()
+    if (c.allocation_mode === 'all') {
+      for (const o of process.outputs) weightByProduct.set(o.product_id, 1)
+    } else {
+      for (const cc of c.consumers) weightByProduct.set(cc.product_id, cc.weight > 0 ? cc.weight : 1)
+    }
+    const myWeight = weightByProduct.get(product.id)
+    if (!myWeight) continue
+    const participating = process.outputs.reduce(
+      (s, o) => s + (weightByProduct.has(o.product_id) ? o.pieces * weightByProduct.get(o.product_id)! : 0),
+      0,
+    )
+    const { cost: compCost, ok } = componentCost(
+      { label: c.label, source_type: c.source_type, ingredient_id: c.ingredient_id, preparation_id: c.preparation_id, quantity: c.quantity, unit: c.unit, waste_factor_percent: c.waste_factor_percent, allocation_mode: c.allocation_mode, consumers: c.consumers },
+      prices, prepCosts,
+    )
+    const allocated = ok && participating > 0 ? compCost * ((pieces * myWeight) / participating) : null
+    if (!ok) missing.push(c.label || 'componente')
+    lines.push({
+      ingredient_name: c.label || (c.source_type === 'preparation' ? 'Preparación' : 'Insumo'),
+      quantity: c.quantity, unit: c.unit, waste_factor_percent: c.waste_factor_percent,
+      unit_price: null, line_cost: allocated, unit_mismatch: !ok,
+    })
+  }
+
+  const materialPP = mine && pieces > 0 ? mine.material_cost / pieces : null
+  const laborPP = mine?.labor_cost != null && pieces > 0 ? mine.labor_cost / pieces : null
+  const overheadPP = mine?.overhead_cost != null && pieces > 0 ? mine.overhead_cost / pieces : null
+  const totalPP = mine?.total_cost != null && pieces > 0 ? mine.total_cost / pieces : materialPP
+
+  const effectiveCost = totalPP ?? materialPP
+  const marginPercent = effectiveCost != null && product.sale_price > 0
+    ? ((product.sale_price - effectiveCost) / product.sale_price) * 100
+    : null
+
+  const isEstimated = missing.length > 0
+  let status: CostStatus = 'ok'
+  if (isEstimated) status = 'incomplete_prices'
+  else if (effectiveCost != null && product.sale_price > 0 && effectiveCost > product.sale_price) status = 'price_insufficient'
+  else if (marginPercent != null && marginPercent < product.target_margin_percent) status = 'margin_low'
+
+  // recipe sintética para que la UI muestre rendimiento/tiempo/cocción
+  const recipe = {
+    id: process.id, product_id: product.id,
+    batch_yield: pieces, yield_unit: 'pza',
+    production_time_hours: process.calendar_time_hours ?? 0,
+    cooking_type: process.cooking_type, active: process.active,
+    recipe_ingredients: [],
+    labor_hours_per_batch: process.labor_hours_per_batch,
+    calendar_time_hours: process.calendar_time_hours,
+  }
+
+  return {
+    product, recipe, lines,
+    batch_cost: mine?.material_cost ?? null,
+    cost_per_piece: materialPP,
+    labor_cost_per_piece: laborPP,
+    overhead_cost_per_piece: overheadPP,
+    total_cost_per_piece: totalPP,
+    margin_percent: marginPercent,
+    is_estimated: isEstimated,
+    missing_prices: [...new Set(missing)],
+    status,
+  }
+}
+
+// Construye el índice producto → proceso que lo produce (el primero activo)
+function indexProductToProcess(processes: ProcessDetail[]): Map<string, ProcessDetail> {
+  const map = new Map<string, ProcessDetail>()
+  for (const proc of processes) {
+    for (const o of proc.outputs) {
+      if (!map.has(o.product_id)) map.set(o.product_id, proc)
+    }
+  }
+  return map
+}
+
+async function loadCostingInputs() {
+  const [prices, preps, laborCtx, overheadCtx, processes] = await Promise.all([
+    fetchLatestIngredientPrices(),
+    fetchPrepsForCosting(),
+    fetchLaborCostContext(),
+    fetchOverheadCostContext(),
+    fetchActiveProcessDetails(),
+  ])
+  const prepCosts = computePrepCosts(preps, prices)
+  return { prices, prepCosts, laborCtx, overheadCtx, processes }
 }
 
 // ── Breakdown queries ────────────────────────────────────────────────────────
 
 export async function fetchCostBreakdowns(): Promise<CostBreakdown[]> {
   const supabase = await createClient()
-
   const { data: rawProducts } = await supabase
-    .from('products')
-    .select(PRODUCT_FIELDS)
-    .eq('active', true)
-    .order('name')
-
+    .from('products').select(PRODUCT_FIELDS).eq('active', true).order('name')
   if (!rawProducts?.length) return []
 
   const products = rawProducts as ProductRow[]
-  const productIds = products.map((p) => p.id)
+  const { prices, prepCosts, laborCtx, overheadCtx, processes } = await loadCostingInputs()
+  const index = indexProductToProcess(processes)
 
-  const recipesResult = await supabase
-    .from('recipes')
-    .select(RECIPE_FIELDS)
-    .in('product_id', productIds)
-    .eq('active', true)
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let rawRecipes: any[] | null = recipesResult.data
-  if (recipesResult.error) {
-    const { data: fallback } = await supabase
-      .from('recipes')
-      .select(RECIPE_FIELDS_FALLBACK)
-      .in('product_id', productIds)
-      .eq('active', true)
-    rawRecipes = fallback
-  }
-
-  const recipes = ((rawRecipes ?? []) as unknown as RecipeRow[]).map((r) => ({
-    ...r,
-    yield_unit: r.yield_unit ?? 'pza',
-  }))
-
-  const ingredientIds = new Set<string>()
-  recipes.forEach((r) => r.recipe_ingredients?.forEach((ri) => ingredientIds.add(ri.ingredient_id)))
-
-  const latestPrices = await resolveIngredientPrices(supabase, [...ingredientIds])
-
-  const [laborCtx, overheadCtx] = await Promise.all([
-    fetchLaborCostContext(),
-    fetchOverheadCostContext(),
-  ])
-
-  const recipeByProductId = new Map(recipes.map((r) => [r.product_id, r]))
-
-  return products.map((product) =>
-    calculateCost(
-      product,
-      recipeByProductId.get(product.id) ?? null,
-      latestPrices,
-      laborCtx,
-      overheadCtx,
-    )
-  )
+  return products.map((product) => {
+    const proc = index.get(product.id)
+    return proc
+      ? buildBreakdownFromProcess(product, proc, prices, prepCosts, laborCtx, overheadCtx)
+      : emptyBreakdown(product)
+  })
 }
 
 export async function fetchProductCostById(productId: string): Promise<CostBreakdown | null> {
   const supabase = await createClient()
-
   const { data: rawProduct } = await supabase
-    .from('products')
-    .select(PRODUCT_FIELDS)
-    .eq('id', productId)
-    .maybeSingle()
-
+    .from('products').select(PRODUCT_FIELDS).eq('id', productId).maybeSingle()
   if (!rawProduct) return null
 
   const product = rawProduct as ProductRow
+  const { prices, prepCosts, laborCtx, overheadCtx, processes } = await loadCostingInputs()
+  const proc = indexProductToProcess(processes).get(productId)
 
-  const recipeResult = await supabase
-    .from('recipes')
-    .select(RECIPE_FIELDS)
-    .eq('product_id', productId)
-    .eq('active', true)
-    .maybeSingle()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let rawRecipe: any | null = recipeResult.data
-  if (recipeResult.error) {
-    const { data: fallback } = await supabase
-      .from('recipes')
-      .select(RECIPE_FIELDS_FALLBACK)
-      .eq('product_id', productId)
-      .eq('active', true)
-      .maybeSingle()
-    rawRecipe = fallback
-  }
-
-  const recipe = rawRecipe
-    ? { ...(rawRecipe as unknown as RecipeRow), yield_unit: (rawRecipe as Record<string, unknown>).yield_unit as string ?? 'pza' }
-    : null
-  const ingredientIds = recipe?.recipe_ingredients?.map((ri) => ri.ingredient_id) ?? []
-  const latestPrices = await resolveIngredientPrices(supabase, ingredientIds)
-
-  const [laborCtx, overheadCtx] = await Promise.all([
-    fetchLaborCostContext(),
-    fetchOverheadCostContext(),
-  ])
-
-  return calculateCost(product, recipe, latestPrices, laborCtx, overheadCtx)
+  return proc
+    ? buildBreakdownFromProcess(product, proc, prices, prepCosts, laborCtx, overheadCtx)
+    : emptyBreakdown(product)
 }

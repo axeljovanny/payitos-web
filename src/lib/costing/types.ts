@@ -14,7 +14,6 @@ export interface IngredientRow {
   id: string
   name: string
   base_unit: string
-  prep_recipe_id?: string | null
 }
 
 export interface IngredientCategoryRow {
@@ -41,6 +40,9 @@ export interface RecipeRow {
   cooking_type: string
   active: boolean
   recipe_ingredients: RecipeIngredientRow[]
+  // Campos de tiempos reales de producción (null si no hay pasos configurados)
+  labor_hours_per_batch: number | null
+  calendar_time_hours: number | null
 }
 
 export interface TeamMemberRow {

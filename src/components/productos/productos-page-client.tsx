@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import type { ProductRow } from '@/lib/productos/queries'
-import { deactivateProducto, reactivateProducto } from '@/lib/productos/actions'
+import { deleteProducto, reactivateProducto } from '@/lib/productos/actions'
 import { formatMXN, formatPercent } from '@/lib/costing/format'
 
 function SearchIcon() {
@@ -62,11 +62,18 @@ function ProductoCard({ p }: { p: ProductRow }) {
               >
                 Editar
               </Link>
-              <form action={deactivateProducto}>
+              <form
+                action={deleteProducto}
+                onSubmit={(e) => {
+                  if (!window.confirm(`¿Eliminar "${p.name}"? Esta acción no se puede deshacer.`)) {
+                    e.preventDefault()
+                  }
+                }}
+              >
                 <input type="hidden" name="id" value={p.id} />
                 <button
                   type="submit"
-                  title="Desactivar"
+                  title="Eliminar producto"
                   className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                 >
                   <TrashIcon />

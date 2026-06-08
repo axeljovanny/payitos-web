@@ -40,7 +40,6 @@ export async function createIngrediente(
   const category_id = (formData.get('category_id') as string) || null
   const supplier_name = (formData.get('supplier_name') as string)?.trim() || null
   const min_stock_target = Math.max(0, Number(formData.get('min_stock_target') ?? 0))
-  const prep_recipe_id = (formData.get('prep_recipe_id') as string) || null
   const context_path = (formData.get('context_path') as string) || '/panadero/ingredientes'
 
   if (!name || !base_unit) return { error: 'Nombre y unidad base son requeridos.' }
@@ -57,47 +56,44 @@ export async function createIngrediente(
 
   const { data: ingredient, error: ingError } = await supabase
     .from('ingredients')
-    .insert({ name, base_unit, category_id, supplier_name, min_stock_target, prep_recipe_id, active: true })
+    .insert({ name, base_unit, category_id, supplier_name, min_stock_target, active: true })
     .select('id')
     .single()
 
   if (ingError || !ingredient) return { error: ingError?.message ?? 'Error al crear ingrediente.' }
 
-  // Preparaciones (prep_recipe_id) no requieren precio inicial — el costo se computa desde la receta.
-  if (!prep_recipe_id) {
-    const priceFields = parsePriceFields(formData)
-    if (!priceFields) {
-      await supabase.from('ingredients').delete().eq('id', ingredient.id)
-      return { error: 'Datos de precio inválidos.' }
-    }
-    const { presentation_name, presentation_quantity, presentation_unit, purchase_price } = priceFields
+  const priceFields = parsePriceFields(formData)
+  if (!priceFields) {
+    await supabase.from('ingredients').delete().eq('id', ingredient.id)
+    return { error: 'Datos de precio inválidos.' }
+  }
+  const { presentation_name, presentation_quantity, presentation_unit, purchase_price } = priceFields
 
-    if (!presentation_name || !presentation_unit || presentation_quantity <= 0) {
-      await supabase.from('ingredients').delete().eq('id', ingredient.id)
-      return { error: 'Presentación, cantidad y unidad de precio son requeridas.' }
-    }
+  if (!presentation_name || !presentation_unit || presentation_quantity <= 0) {
+    await supabase.from('ingredients').delete().eq('id', ingredient.id)
+    return { error: 'Presentación, cantidad y unidad de precio son requeridas.' }
+  }
 
-    const unitPriceResult = calcUnitPriceFromPresentation(
-      purchase_price, presentation_quantity, presentation_unit, base_unit
-    )
-    if (!unitPriceResult.ok) {
-      await supabase.from('ingredients').delete().eq('id', ingredient.id)
-      return { error: `Error de conversión: ${unitPriceResult.error}.` }
-    }
+  const unitPriceResult = calcUnitPriceFromPresentation(
+    purchase_price, presentation_quantity, presentation_unit, base_unit
+  )
+  if (!unitPriceResult.ok) {
+    await supabase.from('ingredients').delete().eq('id', ingredient.id)
+    return { error: `Error de conversión: ${unitPriceResult.error}.` }
+  }
 
-    const { error: priceError } = await supabase.from('ingredient_price_history').insert({
-      ingredient_id: ingredient.id,
-      presentation_name,
-      presentation_quantity,
-      presentation_unit,
-      purchase_price,
-      unit_price: unitPriceResult.value,
-    })
+  const { error: priceError } = await supabase.from('ingredient_price_history').insert({
+    ingredient_id: ingredient.id,
+    presentation_name,
+    presentation_quantity,
+    presentation_unit,
+    purchase_price,
+    unit_price: unitPriceResult.value,
+  })
 
-    if (priceError) {
-      await supabase.from('ingredients').delete().eq('id', ingredient.id)
-      return { error: `Ingrediente creado pero falló el precio: ${priceError.message}` }
-    }
+  if (priceError) {
+    await supabase.from('ingredients').delete().eq('id', ingredient.id)
+    return { error: `Ingrediente creado pero falló el precio: ${priceError.message}` }
   }
 
   revalidatePath(context_path)
@@ -116,7 +112,6 @@ export async function updateIngrediente(
   const category_id = (formData.get('category_id') as string) || null
   const supplier_name = (formData.get('supplier_name') as string)?.trim() || null
   const min_stock_target = Math.max(0, Number(formData.get('min_stock_target') ?? 0))
-  const prep_recipe_id = (formData.get('prep_recipe_id') as string) || null
   const context_path = (formData.get('context_path') as string) || '/panadero/ingredientes'
 
   if (!id || !name || !base_unit) return { error: 'Nombre y unidad base son requeridos.' }
@@ -125,7 +120,7 @@ export async function updateIngrediente(
 
   const { error } = await supabase
     .from('ingredients')
-    .update({ name, base_unit, category_id, supplier_name, min_stock_target, prep_recipe_id })
+    .update({ name, base_unit, category_id, supplier_name, min_stock_target })
     .eq('id', id)
 
   if (error) return { error: error.message }

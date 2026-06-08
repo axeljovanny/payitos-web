@@ -5,7 +5,6 @@ import {
   fetchCategoryOptions,
 } from '@/lib/ingredientes/queries'
 import { updateIngrediente, deletePriceEntry } from '@/lib/ingredientes/actions'
-import { fetchRecipesForPrepSelector } from '@/lib/recetas/queries'
 import { formatMXN, formatDate } from '@/lib/costing/format'
 import IngredienteForm from '@/components/ingredientes/ingrediente-form'
 import PriceEntryForm from '@/components/ingredientes/price-entry-form'
@@ -30,17 +29,15 @@ function TrashIcon() {
 export default async function EditarInsumoAdminPage({ params }: Props) {
   const { id } = await params
 
-  const [ingrediente, categories, priceHistory, prepRecipes] = await Promise.all([
+  const [ingrediente, categories, priceHistory] = await Promise.all([
     fetchIngredienteById(id),
     fetchCategoryOptions(),
     fetchPriceHistory(id),
-    fetchRecipesForPrepSelector(),
   ])
 
   if (!ingrediente) notFound()
 
   const latestPrice = priceHistory[0] ?? null
-  const isPrep = !!ingrediente.prep_recipe_id
 
   return (
     <div className="space-y-6">
@@ -52,7 +49,6 @@ export default async function EditarInsumoAdminPage({ params }: Props) {
 
       <IngredienteForm
         categories={categories}
-        prepRecipes={prepRecipes}
         action={updateIngrediente}
         basePath="/admin/insumos"
         entityLabel="insumo"
@@ -62,12 +58,11 @@ export default async function EditarInsumoAdminPage({ params }: Props) {
           base_unit: ingrediente.base_unit,
           category_id: ingrediente.category_id,
           supplier_name: ingrediente.supplier_name,
-          prep_recipe_id: ingrediente.prep_recipe_id,
         }}
       />
 
       {/* ── Historial de precios con borrado ── */}
-      {!isPrep && (
+      {(
         <div className="space-y-3" id="historial">
           <div className="flex items-center justify-between">
             <p className="text-base font-semibold text-gray-700">Historial de precios</p>
@@ -156,12 +151,6 @@ export default async function EditarInsumoAdminPage({ params }: Props) {
               basePath="/admin/insumos"
             />
           </div>
-        </div>
-      )}
-
-      {isPrep && (
-        <div className="rounded-2xl bg-pink-50 border border-pink-200 p-4 text-sm text-[#b02558]">
-          Este insumo es una preparación — su costo se calcula automáticamente desde la receta vinculada.
         </div>
       )}
     </div>

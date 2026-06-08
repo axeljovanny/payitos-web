@@ -4,12 +4,14 @@ import {
   getWeeklyPlanById,
   getWeeklyPlanSpecialOrders,
   getWeeklyPlanIngredientRequirements,
+  getWeeklyPlanCapacity,
   getProductsForPlan,
   formatWeekLabel,
 } from '@/lib/planeacion/queries'
 import { approveWeeklyPlan, updateWeeklyPlan, deleteWeeklyPlan, reopenWeeklyPlan } from '@/lib/planeacion/actions'
 import PlaneacionSemana from '@/components/planeacion/planeacion-semana'
 import ResumenInsumos from '@/components/planeacion/resumen-insumos'
+import CapacidadSemana from '@/components/planeacion/capacidad-semana'
 import type { PlanStatus } from '@/lib/planeacion/types'
 
 const BASE = '/admin/planeacion'
@@ -26,10 +28,11 @@ const STATUS_LABELS: Record<PlanStatus, string> = {
 export default async function AdminPlaneacionDetailPage({ params }: Props) {
   const { id } = await params
 
-  const [planResult, products, ingredients] = await Promise.all([
+  const [planResult, products, ingredients, capacity] = await Promise.all([
     getWeeklyPlanById(id),
     getProductsForPlan(),
     getWeeklyPlanIngredientRequirements(id),
+    getWeeklyPlanCapacity(id),
   ])
 
   if (!planResult) notFound()
@@ -198,6 +201,13 @@ export default async function AdminPlaneacionDetailPage({ params }: Props) {
               Reabrir como borrador → Editar
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Capacity summary */}
+      {capacity && (
+        <div className="space-y-2">
+          <CapacidadSemana summary={capacity} />
         </div>
       )}
 

@@ -22,7 +22,6 @@ interface Props {
 
 export default function InsumoCard({ ing, basePath }: Props) {
   const [expanded, setExpanded] = useState(false)
-  const isPrep = !!ing.prep_recipe_id
 
   return (
     <div
@@ -48,14 +47,6 @@ export default function InsumoCard({ ing, basePath }: Props) {
             <span className="text-base font-semibold truncate" style={{ color: 'var(--foreground)' }}>
               {ing.name}
             </span>
-            {isPrep && (
-              <span
-                className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: 'var(--brand-light)', color: 'var(--brand-dark)' }}
-              >
-                prep
-              </span>
-            )}
             {!ing.active && (
               <span className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
                 inactivo
@@ -65,15 +56,13 @@ export default function InsumoCard({ ing, basePath }: Props) {
         </div>
 
         <div className="shrink-0 flex items-center gap-2.5">
-          {ing.unit_price != null && !isPrep ? (
+          {ing.unit_price != null ? (
             <span className="text-lg font-bold tabular-nums" style={{ color: 'var(--foreground)' }}>
               {formatMXN(ing.unit_price)}
               <span className="text-sm font-normal" style={{ color: 'var(--ink-faint)' }}>
                 /{ing.base_unit}
               </span>
             </span>
-          ) : isPrep ? (
-            <span className="text-sm font-semibold" style={{ color: 'var(--brand)' }}>auto</span>
           ) : (
             <span className="text-sm text-red-500">sin precio</span>
           )}
@@ -92,7 +81,7 @@ export default function InsumoCard({ ing, basePath }: Props) {
       {/* Detalle expandido */}
       {expanded && (
         <div className="px-5 pb-5 space-y-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-          {!isPrep && (
+          {(
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-4">
               {ing.supplier_name && (
                 <div>
@@ -133,15 +122,6 @@ export default function InsumoCard({ ing, basePath }: Props) {
             </div>
           )}
 
-          {isPrep && (
-            <p
-              className="mt-4 text-sm rounded-xl px-3 py-2.5"
-              style={{ background: 'var(--brand-light)', color: 'var(--brand-dark)' }}
-            >
-              Preparación — el costo se calcula automáticamente desde la receta vinculada.
-            </p>
-          )}
-
           {/* Acciones */}
           <div className="flex flex-col gap-2 pt-1">
             {ing.active ? (
@@ -157,18 +137,16 @@ export default function InsumoCard({ ing, basePath }: Props) {
                 >
                   Editar insumo
                 </Link>
-                {!isPrep && (
-                  <Link
-                    href={`${basePath}/${ing.id}/editar#historial`}
-                    className="w-full text-center rounded-xl border py-3 text-sm font-semibold transition-[transform,background-color] duration-100 active:scale-[0.97]"
-                    style={{
-                      borderColor: 'rgba(237,80,124,0.28)',
-                      color: 'var(--brand-dark)',
-                    }}
-                  >
-                    Ver / editar historial de precios
-                  </Link>
-                )}
+                <Link
+                  href={`${basePath}/${ing.id}/editar#historial`}
+                  className="w-full text-center rounded-xl border py-3 text-sm font-semibold transition-[transform,background-color] duration-100 active:scale-[0.97]"
+                  style={{
+                    borderColor: 'rgba(237,80,124,0.28)',
+                    color: 'var(--brand-dark)',
+                  }}
+                >
+                  Ver / editar historial de precios
+                </Link>
                 <form action={deactivateIngrediente}>
                   <input type="hidden" name="id" value={ing.id} />
                   <button

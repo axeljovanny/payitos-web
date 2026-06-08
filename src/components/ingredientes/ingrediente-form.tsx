@@ -4,7 +4,6 @@ import { useActionState, useState, useMemo } from 'react'
 import Link from 'next/link'
 import type { ActionState } from '@/lib/ingredientes/actions'
 import type { CategoryOption } from '@/lib/ingredientes/queries'
-import type { PrepRecipeOption } from '@/lib/recetas/queries'
 import { calcUnitPriceFromPresentation } from '@/lib/costing/units'
 import { formatUnitPrice, UNIT_OPTIONS } from '@/lib/costing/format'
 
@@ -14,24 +13,20 @@ export interface IngredienteDefaultValues {
   base_unit?: string
   category_id?: string | null
   supplier_name?: string | null
-  prep_recipe_id?: string | null
 }
 
 interface Props {
   categories: CategoryOption[]
-  prepRecipes?: PrepRecipeOption[]
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>
   defaultValues?: IngredienteDefaultValues
   basePath?: string
   entityLabel?: string
 }
 
-export default function IngredienteForm({ categories, prepRecipes, action, defaultValues, basePath, entityLabel = 'ingrediente' }: Props) {
+export default function IngredienteForm({ categories, action, defaultValues, basePath, entityLabel = 'ingrediente' }: Props) {
   const [state, formAction, pending] = useActionState(action, { error: null })
   const base = basePath ?? '/panadero/ingredientes'
   const isEditing = !!defaultValues?.id
-  const [prepRecipeId, setPrepRecipeId] = useState(defaultValues?.prep_recipe_id ?? '')
-  const isPrep = !!prepRecipeId
 
   const [baseUnit, setBaseUnit] = useState(defaultValues?.base_unit ?? '')
   const [presentationUnit, setPresentationUnit] = useState('kg')
@@ -53,7 +48,6 @@ export default function IngredienteForm({ categories, prepRecipes, action, defau
     <form action={formAction} className="space-y-5">
       <input type="hidden" name="context_path" value={base} />
       {defaultValues?.id && <input type="hidden" name="id" value={defaultValues.id} />}
-      <input type="hidden" name="prep_recipe_id" value={prepRecipeId} />
 
       {/* ── Datos del ingrediente ── */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
@@ -121,39 +115,8 @@ export default function IngredienteForm({ categories, prepRecipes, action, defau
         </div>
       </div>
 
-      {/* ── Preparación: vincular a receta fuente (solo en edición) ── */}
-      {isEditing && prepRecipes !== undefined && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-          <div>
-            <p className="text-sm font-semibold text-gray-700">¿Es una preparación?</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Si este ingrediente se elabora en cocina (ganache, crema, masa…),
-              vincúlalo a su receta. El costo se calcula automáticamente.
-            </p>
-          </div>
-          <select
-            value={prepRecipeId}
-            onChange={(e) => setPrepRecipeId(e.target.value)}
-            className={inputClass}
-          >
-            <option value="">No es una preparación</option>
-            {prepRecipes.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.product_name} — {r.batch_yield} {r.yield_unit}
-              </option>
-            ))}
-          </select>
-          {isPrep && (
-            <p className="text-xs text-[#d43a6a] bg-pink-50 rounded-lg px-3 py-2">
-              El precio de este ingrediente se calculará desde la receta seleccionada.
-              No es necesario registrar precio de compra.
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* ── Precio inicial (solo al crear ingredientes no-preparación) ── */}
-      {!isEditing && !isPrep && (
+      {/* ── Precio inicial (solo al crear) ── */}
+      {!isEditing && (
         <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
           <p className="text-sm font-semibold text-gray-700">Precio inicial</p>
 

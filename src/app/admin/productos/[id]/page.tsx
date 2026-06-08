@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { fetchProductoById, fetchActiveRecipeForProduct } from '@/lib/productos/queries'
-import { deactivateProducto, reactivateProducto } from '@/lib/productos/actions'
+import { fetchProductoById, fetchProcessForProduct } from '@/lib/productos/queries'
+import { reactivateProducto } from '@/lib/productos/actions'
+import DeleteProductoButton from '@/components/productos/delete-producto-button'
 import { formatMXN, formatPercent } from '@/lib/costing/format'
 import BackButton from '@/components/ui/back-button'
 
@@ -19,9 +20,9 @@ const COOKING_LABELS: Record<string, string> = {
 export default async function ProductoDetailPage({ params }: Props) {
   const { id } = await params
 
-  const [product, recipe] = await Promise.all([
+  const [product, process] = await Promise.all([
     fetchProductoById(id),
-    fetchActiveRecipeForProduct(id),
+    fetchProcessForProduct(id),
   ])
 
   if (!product) notFound()
@@ -63,31 +64,37 @@ export default async function ProductoDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Receta */}
+      {/* Proceso de producción */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Receta</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Proceso de producción</p>
           <Link
-            href={`/admin/productos/${id}/receta`}
+            href={process ? `/admin/procesos/${process.process_id}/editar` : '/admin/procesos/nueva'}
             className="text-xs font-medium text-[#d43a6a] hover:text-[#8b1a42]"
           >
-            {recipe ? 'Editar receta' : 'Crear receta'}
+            {process ? 'Editar proceso' : 'Crear proceso'}
           </Link>
         </div>
-        {recipe ? (
+        {process ? (
           <div className="grid grid-cols-2 gap-y-1.5 text-sm">
-            <span className="text-gray-500">Rendimiento</span>
-            <span className="font-medium text-gray-800 text-right">{recipe.batch_yield} pzas</span>
+            <span className="text-gray-500">Corrida</span>
+            <span className="font-medium text-gray-800 text-right">{process.process_name}</span>
+            <span className="text-gray-500">Piezas por corrida</span>
+            <span className="font-medium text-gray-800 text-right">{process.pieces} pzas</span>
             <span className="text-gray-500">Cocción</span>
             <span className="font-medium text-gray-800 text-right">
-              {COOKING_LABELS[recipe.cooking_type] ?? recipe.cooking_type}
+              {COOKING_LABELS[process.cooking_type] ?? process.cooking_type}
             </span>
-            <span className="text-gray-500">Insumos</span>
-            <span className="font-medium text-gray-800 text-right">{recipe.ingredient_count}</span>
+            {process.output_count > 1 && (
+              <>
+                <span className="text-gray-500">Variantes en la corrida</span>
+                <span className="font-medium text-gray-800 text-right">{process.output_count}</span>
+              </>
+            )}
           </div>
         ) : (
           <p className="text-sm text-gray-400">
-            Sin receta activa. Crea una para calcular el costo real.
+            Sin proceso activo. Crea uno para calcular el costo real.
           </p>
         )}
       </div>
@@ -108,15 +115,8 @@ export default async function ProductoDetailPage({ params }: Props) {
         </Link>
       </div>
 
-      <div className="flex justify-center">
-        {product.active ? (
-          <form action={deactivateProducto}>
-            <input type="hidden" name="id" value={product.id} />
-            <button type="submit" className="text-xs text-gray-400 hover:text-red-500 transition-colors">
-              Desactivar producto
-            </button>
-          </form>
-        ) : (
+      <div className="flex justify-center gap-4">
+        {!product.active && (
           <form action={reactivateProducto}>
             <input type="hidden" name="id" value={product.id} />
             <button type="submit" className="text-xs font-medium text-[#d43a6a] hover:text-[#8b1a42]">
@@ -124,6 +124,7 @@ export default async function ProductoDetailPage({ params }: Props) {
             </button>
           </form>
         )}
+        <DeleteProductoButton productId={product.id} productName={product.name} />
       </div>
     </div>
   )
