@@ -1,10 +1,18 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { CurrentUser } from '@/lib/supabase/user'
+import type { CurrentUser, UserRole } from '@/lib/supabase/user'
 import BottomNav from './nav'
 import SwipeNavigation from './swipe-navigation'
+
+const DASHBOARD_PATH: Record<UserRole, string> = {
+  Admin: '/admin',
+  panadero: '/panadero',
+  vendedor: '/vendedor',
+  planificacion: '/planificacion',
+}
 
 interface Props {
   user: CurrentUser
@@ -31,16 +39,18 @@ export default function AppShell({ user, children }: Props) {
           boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
         }}
       >
-        {/* Logo real de Payitos — rosa en light, crema en dark */}
-        <Image
-          src="/logo-payitos.svg"
-          alt="Payito's"
-          width={110}
-          height={40}
-          className="h-8 w-auto logo-payitos"
-          style={{ filter: 'brightness(0) saturate(100%) invert(35%) sepia(80%) saturate(600%) hue-rotate(305deg) brightness(95%)' }}
-          priority
-        />
+        {/* Logo real de Payitos — clic lleva al dashboard del rol */}
+        <Link href={DASHBOARD_PATH[user.role] ?? '/'} aria-label="Ir al inicio" className="shrink-0">
+          <Image
+            src="/logo-payitos.svg"
+            alt="Payito's"
+            width={110}
+            height={40}
+            className="h-8 w-auto logo-payitos"
+            style={{ filter: 'brightness(0) saturate(100%) invert(35%) sepia(80%) saturate(600%) hue-rotate(305deg) brightness(95%)' }}
+            priority
+          />
+        </Link>
 
         <div className="flex items-center gap-2">
           <span

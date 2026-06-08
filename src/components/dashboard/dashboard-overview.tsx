@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { DashboardData } from '@/lib/dashboard/queries'
 import { formatMXN, formatPercent } from '@/lib/costing/format'
+import DashboardSimulator from './dashboard-simulator'
 
 const BAR_COLORS = ['#ed507c', '#f0853f', '#e0b341', '#5aa66f', '#5a8fce', '#9b6bd0', '#c45a8f']
 
@@ -102,6 +103,16 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
             Promedio sobre {productsCounted} producto{productsCounted !== 1 ? 's' : ''} con precio y costo. El mix real ajusta el número.
           </p>
         </div>
+      )}
+
+      {/* ── Simulador interactivo (mix por producto) ── */}
+      {!noBudget && hasPricedProducts && (
+        <DashboardSimulator
+          products={data.simProducts}
+          monthlyTotalCurrent={monthlyTotalCurrent}
+          monthlyTotalTarget={monthlyTotalTarget}
+          hasTargetGap={hasTargetGap}
+        />
       )}
 
       {/* ── Para pagar sueldos deseados ── */}

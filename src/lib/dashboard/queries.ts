@@ -11,6 +11,13 @@ export interface BudgetSlice {
   percent: number
 }
 
+export interface SimProduct {
+  id: string
+  name: string
+  price: number
+  contribution: number   // precio − ingredientes por pieza
+}
+
 export interface DashboardData {
   // Presupuesto mensual a cubrir
   monthlyFixed: number
@@ -33,6 +40,9 @@ export interface DashboardData {
   breakevenRevenueTarget: number | null
   piecesPerWeekCurrent: number | null
   piecesPerDayCurrent: number | null
+
+  // Productos para el simulador de mix
+  simProducts: SimProduct[]
 
   // Diagnóstico
   productsBelowCost: string[]
@@ -98,6 +108,16 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const avgContribution = avgPrice - avgIngredientCost
   const contributionMarginPct = avgPrice > 0 ? (avgContribution / avgPrice) * 100 : null
 
+  // Lista para el simulador de mix (todos los productos con precio y costo)
+  const simProducts: SimProduct[] = priced
+    .map((b) => ({
+      id: b.product.id,
+      name: b.product.name,
+      price: b.product.sale_price,
+      contribution: b.product.sale_price - (b.cost_per_piece as number),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+
   // ── Punto de equilibrio ──
   const canBreakEven = avgContribution > 0
   const beCurrent = canBreakEven ? monthlyTotalCurrent / avgContribution : null
@@ -125,6 +145,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     breakevenRevenueTarget,
     piecesPerWeekCurrent: breakevenPiecesCurrent != null ? Math.ceil(breakevenPiecesCurrent / WEEKS_PER_MONTH) : null,
     piecesPerDayCurrent: breakevenPiecesCurrent != null ? Math.ceil(breakevenPiecesCurrent / PRODUCTION_DAYS_PER_MONTH) : null,
+    simProducts,
     productsBelowCost,
     productsCounted,
     hasFixed: monthlyFixed > 0,
